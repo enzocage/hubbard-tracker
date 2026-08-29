@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTF Studio 4.0 • Modular Pattern-Centric SID Motif Tracker</title>
+    <link rel="stylesheet" href="tracker4.css?v=4.0.0">
+</head>
+<body class="t4-body" data-theme="cyber">
+
+    <div class="t4-app-container">
+
+        <!-- ================================================================= -->
+        <!-- 1. TOP HEADER & WORKSPACE HUD                                     -->
+        <!-- ================================================================= -->
+        <header class="t4-header">
+            <div class="t4-brand">
+                <div class="t4-logo-badge">MOTIF 4.0</div>
+                <div>
+                    <h1>HUBBARD MOTIF TRACKER 4</h1>
+                    <div class="t4-sub" id="t4-sub-info">COMMANDO • Rob Hubbard (1985) • 3-Spur Pattern-Dekomposition</div>
+                </div>
+            </div>
+
+            <!-- Global Master Transport & Project Selection -->
+            <div class="t4-header-controls">
+                <select id="t4-sid-select" class="t4-select" title="Original Rob Hubbard SID laden">
+                    <option value="sid/Commando.sid" selected>01. Commando (1985)</option>
+                    <option value="sid/Monty_on_the_Run.sid">02. Monty on the Run (1985)</option>
+                    <option value="sid/Delta.sid">03. Delta (1987)</option>
+                    <option value="sid/International_Karate.sid">04. International Karate (1985)</option>
+                    <option value="sid/Sanxion.sid">05. Sanxion (1986)</option>
+                    <option value="sid/Crazy_Comets.sid">06. Crazy Comets (1985)</option>
+                    <option value="sid/Spellbound.sid">07. Spellbound (1985)</option>
+                    <option value="sid/Master_of_Magic.sid">08. Master of Magic (1985)</option>
+                    <option value="sid/Lightforce.sid">09. Lightforce (1986)</option>
+                    <option value="sid/Warhawk.sid">10. Warhawk (1986)</option>
+                    <option value="sid/Knucklebusters.sid">11. Knucklebusters (1986)</option>
+                    <option value="sid/Mega_Apocalypse.sid">12. Mega Apocalypse (1987)</option>
+                    <option value="sid/Kentilla.sid">13. Kentilla (1986)</option>
+                    <option value="sid/The_Last_V8.sid">14. The Last V8 (1985)</option>
+                    <option value="sid/I-Ball.sid">15. I-Ball (1987)</option>
+                    <option value="sid/Zoids.sid">16. Zoids (1985)</option>
+                    <option value="sid/Flash_Gordon.sid">17. Flash Gordon (1986)</option>
+                    <option value="sid/Chimera.sid">18. Chimera (1985)</option>
+                    <option value="sid/Thrust.sid">19. Thrust (1986)</option>
+                    <option value="sid/Human_Race.sid">20. The Human Race (1985)</option>
+                    <option value="sid/Nemesis_the_Warlock.sid">21. Nemesis the Warlock (1987)</option>
+                </select>
+
+                <!-- Transport Buttons -->
+                <div class="t4-btn-group">
+                    <button class="t4-btn t4-btn-play" id="btn-play-song" title="Ganzen Song abspielen (Space)">
+                        <span class="icon">▶</span> SONG
+                    </button>
+                    <button class="t4-btn t4-btn-loop" id="btn-play-motif" title="Ausgewähltes Pattern/Motif loopen">
+                        <span class="icon">🔁</span> MOTIF
+                    </button>
+                    <button class="t4-btn t4-btn-stop" id="btn-stop" title="Wiedergabe stoppen (Esc)">
+                        <span class="icon">⏹</span> STOP
+                    </button>
+                </div>
+
+                <!-- Parameters -->
+                <div class="t4-param-box">
+                    <label>BPM</label>
+                    <input type="number" id="inp-bpm" min="40" max="240" value="125">
+                </div>
+                <div class="t4-param-box">
+                    <label>SPEED</label>
+                    <input type="number" id="inp-speed" min="1" max="16" value="6">
+                </div>
+                <div class="t4-param-box">
+                    <label>CLOCK</label>
+                    <select id="sel-clock">
+                        <option value="pal" selected>PAL 50Hz</option>
+                        <option value="ntsc">NTSC 60Hz</option>
+                    </select>
+                </div>
+
+                <select id="sel-theme" class="t4-select" title="Farbschema wechseln">
+                    <option value="cyber" selected>Cyber Slate</option>
+                    <option value="ft2">FastTracker II</option>
+                    <option value="c64">Commodore 64</option>
+                    <option value="matrix">Matrix Green</option>
+                    <option value="dracula">Dracula Dark</option>
+                </select>
+
+                <div class="t4-export-actions">
+                    <button class="t4-btn-export" id="btn-export-sid" title="Als spielbare C64 .SID-Datei exportieren">💾 .SID</button>
+                    <button class="t4-btn-export" id="btn-export-htf" title="Als JSON-Projekt speichern">📄 .HTF</button>
+                    <button class="t4-btn-export" id="btn-export-wav" title="Als 44.1kHz WAV rendern">🔊 .WAV</button>
+                </div>
+
+                <button class="t4-btn-help" id="btn-help" title="Hilfe & Shortcuts (F1)">❓ HILFE</button>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- 2. MULTI-TRACK MODULAR SONG ARRANGER (3-VOICE MOTIF TIMELINE)      -->
+        <!-- ================================================================= -->
+        <section class="t4-arranger-panel">
+            <div class="t4-panel-header">
+                <div class="t4-ph-left">
+                    <span class="t4-tag">🎼 3-SPUR SONG-ARRANGEMENT & WIEDERKEHRENDE MOTIF-SEQUENZ</span>
+                    <span class="t4-stat-badge" id="arranger-stats-badge">8 ABSCHNITTE • 32 TAKTE • 1:01 MIN</span>
+                </div>
+                <div class="t4-ph-right">
+                    <button class="t4-btn-xs" id="btn-add-timeline-col" title="Neuen Sequenz-Slot anfügen">+ ABSCHNITT</button>
+                    <button class="t4-btn-xs" id="btn-dup-timeline-col" title="Abschnitt duplizieren">⧉ DUPLIZIEREN</button>
+                    <button class="t4-btn-xs t4-btn-del" id="btn-del-timeline-col" title="Abschnitt entfernen">🗑️ LÖSCHEN</button>
+                    <button class="t4-btn-xs" id="btn-shift-left" title="Nach links verschieben">◄ LINKS</button>
+                    <button class="t4-btn-xs" id="btn-shift-right" title="Nach rechts verschieben">RECHTS ►</button>
+                </div>
+            </div>
+
+            <!-- 3 Horizontal Voice Lanes with Motif Blocks -->
+            <div class="t4-timeline-container" id="timeline-scroll-pane">
+                
+                <!-- Lane 1: Melody & Lead Solo -->
+                <div class="t4-voice-lane lane-1">
+                    <div class="lane-header">
+                        <div class="lane-title">
+                            <span class="dot dot-1"></span>
+                            <span class="name">SPUR 1: LEAD MOTIFS</span>
+                        </div>
+                        <div class="lane-controls">
+                            <button class="btn-mute" id="btn-mute-1" title="Mute Track 1 (F9)">M</button>
+                            <button class="btn-solo" id="btn-solo-1" title="Solo Track 1">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-1"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-blocks" id="lane-blocks-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Lane 2: Arpeggios & Chords -->
+                <div class="t4-voice-lane lane-2">
+                    <div class="lane-header">
+                        <div class="lane-title">
+                            <span class="dot dot-2"></span>
+                            <span class="name">SPUR 2: ARP MOTIFS</span>
+                        </div>
+                        <div class="lane-controls">
+                            <button class="btn-mute" id="btn-mute-2" title="Mute Track 2 (F10)">M</button>
+                            <button class="btn-solo" id="btn-solo-2" title="Solo Track 2">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-2"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-blocks" id="lane-blocks-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Lane 3: Bass & Drums Multiplex -->
+                <div class="t4-voice-lane lane-3">
+                    <div class="lane-header">
+                        <div class="lane-title">
+                            <span class="dot dot-3"></span>
+                            <span class="name">SPUR 3: BASS/DRUM MOTIFS</span>
+                        </div>
+                        <div class="lane-controls">
+                            <button class="btn-mute" id="btn-mute-3" title="Mute Track 3 (F11)">M</button>
+                            <button class="btn-solo" id="btn-solo-3" title="Solo Track 3">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-3"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-blocks" id="lane-blocks-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 3. MOTIF & INSTRUMENT WORKBENCH (DUAL-PANE EDITING)               -->
+        <!-- ================================================================= -->
+        <div class="t4-main-grid">
+
+            <!-- 3.1 LEFT: MOTIF POOL & REUSABLE PATTERN LIBRARY -->
+            <aside class="t4-pool-sidebar">
+                <div class="t4-panel-header">
+                    <span class="t4-tag">🗂️ MOTIF- & RIFF-BIBLIOTHEK</span>
+                    <button class="t4-btn-xs" id="btn-create-new-motif" title="Neues leeres Motiv erstellen">+ MOTIF</button>
+                </div>
+                
+                <div class="t4-pool-scroll">
+                    <!-- Melody Motifs Group -->
+                    <div class="t4-pool-group">
+                        <div class="group-title track-1-text">🔵 SPUR 1: LEAD & MELODIE-MOTIFS</div>
+                        <div class="group-list" id="pool-list-track-1">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Arp Motifs Group -->
+                    <div class="t4-pool-group">
+                        <div class="group-title track-2-text">🟠 SPUR 2: ARP- & HARMONIE-MOTIFS</div>
+                        <div class="group-list" id="pool-list-track-2">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Bass/Drum Motifs Group -->
+                    <div class="t4-pool-group">
+                        <div class="group-title track-3-text">🟢 SPUR 3: BASS- & RHYTHMUS-MOTIFS</div>
+                        <div class="group-list" id="pool-list-track-3">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 3.2 CENTER: VISUAL STEP & PITCH MATRIX EDITOR FOR ACTIVE MOTIF -->
+            <main class="t4-motif-editor-panel">
+                <div class="t4-panel-header editor-header">
+                    <div class="active-motif-hud">
+                        <span class="motif-badge" id="active-motif-badge">M01</span>
+                        <span class="motif-title-text" id="active-motif-title">HEROIC LEAD THEME (64 STEPS)</span>
+                    </div>
+
+                    <!-- Pitch & Timing Transformation Toolkit -->
+                    <div class="t4-toolkit">
+                        <div class="t4-btn-group">
+                            <button class="t4-tool-btn" id="btn-undo" title="Rückgängig (Ctrl+Z)">↩</button>
+                            <button class="t4-tool-btn" id="btn-redo" title="Wiederholen (Ctrl+Y)">↪</button>
+                        </div>
+                        <div class="t4-btn-group">
+                            <button class="t4-tool-btn" id="btn-trans-dn" title="Halbton tiefer (-1)">-1</button>
+                            <button class="t4-tool-btn" id="btn-trans-up" title="Halbton höher (+1)">+1</button>
+                            <button class="t4-tool-btn" id="btn-oct-dn-btn" title="Oktave tiefer (-12)">-12</button>
+                            <button class="t4-tool-btn" id="btn-oct-up-btn" title="Oktave höher (+12)">+12</button>
+                        </div>
+                        <div class="t4-btn-group">
+                            <select id="sel-scale" class="t4-select-xs" title="Skalen-Quantisierung">
+                                <option value="none">Skala: Frei</option>
+                                <option value="minor">Natürlich Moll</option>
+                                <option value="harm_minor">Harmonisch Moll</option>
+                                <option value="major">Dur</option>
+                                <option value="pentatonic">Pentatonik</option>
+                                <option value="blues">Blues</option>
+                            </select>
+                            <button class="t4-tool-btn" id="btn-quantize">QUANT</button>
+                        </div>
+                        <div class="t4-btn-group">
+                            <button class="t4-tool-btn" id="btn-reverse" title="Notenfolge umkehren">REV</button>
+                            <button class="t4-tool-btn" id="btn-invert" title="Noten spiegeln">INV</button>
+                            <button class="t4-tool-btn" id="btn-insert-noteoff" title="Note-Off einfügen (Key 1 / ===)">=== OFF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Pitch Grid for Selected Motif -->
+                <div class="t4-grid-scroll-pane" id="motif-grid-scroll">
+                    <div class="t4-grid-table" id="motif-grid-table">
+                        <!-- Populated by JS: Steps 0 to 63 for active motif -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- 3.3 RIGHT: MOS 6581 INSTRUMENT SCULPTOR & HARDWARE SYNTHESIS -->
+            <aside class="t4-instrument-studio">
+                <div class="t4-panel-header">
+                    <span class="t4-tag">🎛️ MOS 6581 INSTRUMENTEN-STUDIO</span>
+                    <span class="val-badge" id="lbl-active-inst-id">INST #01</span>
+                </div>
+
+                <div class="t4-inst-body">
+                    <!-- Preset Selector -->
+                    <div class="t4-ctrl-block">
+                        <label class="t4-label">SIGNATURE SOUND PRESETS:</label>
+                        <select id="sel-inst-preset" class="t4-select-sm">
+                            <option value="">-- PRESET WÄHLEN --</option>
+                            <option value="commando_lead">01. Commando Heroic Pulse Lead</option>
+                            <option value="monty_violin">02. Monty Hi-Speed Violin Saw</option>
+                            <option value="delta_space_arp">03. Delta Space 50Hz Arpeggio</option>
+                            <option value="ik_slap_bass">04. IK+ 16th Slap Pop Bass</option>
+                            <option value="sanxion_snare">05. Sanxion Noise Snare</option>
+                            <option value="crazy_laser">06. Crazy Comets Laser Sync</option>
+                            <option value="spellbound_bass">07. Spellbound Dark Triangle Sub</option>
+                            <option value="magic_flute">08. Master of Magic Flute</option>
+                            <option value="lightforce_arp">09. Lightforce m11 Arp</option>
+                            <option value="warhawk_kick">10. Warhawk Heavy Kick</option>
+                            <option value="knuckle_metal">11. Knucklebusters RingMod Bell</option>
+                            <option value="mega_brass">12. Mega Apocalypse Brass</option>
+                        </select>
+                    </div>
+
+                    <!-- Waveform Selector -->
+                    <div class="t4-ctrl-block">
+                        <div class="lbl-row">
+                            <label class="t4-label">WELLENFORM & CHIP-FLAGS:</label>
+                            <span class="val-txt" id="lbl-wave-val">$41 (Puls)</span>
+                        </div>
+                        <div class="wave-matrix">
+                            <button class="btn-wave active" data-wave="0x41" title="Rechteck/Puls">⎍ $41</button>
+                            <button class="btn-wave" data-wave="0x21" title="Sägezahn">▲ $21</button>
+                            <button class="btn-wave" data-wave="0x11" title="Dreieck">~ $11</button>
+                            <button class="btn-wave" data-wave="0x81" title="Rauschen / Galois LFSR">▒ $81</button>
+                            <button class="btn-wave" data-wave="0x15" title="Dreieck + Ring-Modulation">▲🔔 $15</button>
+                            <button class="btn-wave" data-wave="0x43" title="Puls + Hard-Sync">⎍⚙ $43</button>
+                        </div>
+                    </div>
+
+                    <!-- Pulse Width -->
+                    <div class="t4-ctrl-block">
+                        <div class="lbl-row">
+                            <label class="t4-label">PULSBREITE (PW):</label>
+                            <span class="val-txt" id="lbl-pw-val">2048 (50%)</span>
+                        </div>
+                        <input type="range" id="inp-pw" min="0" max="4095" value="2048" class="t4-range">
+                        <div class="pw-bar"><div class="pw-fill" id="pw-fill" style="width: 50%;"></div></div>
+                    </div>
+
+                    <!-- ADSR Envelope Canvas -->
+                    <div class="t4-ctrl-block">
+                        <div class="lbl-row">
+                            <label class="t4-label">ADSR HÜLLKURVE:</label>
+                            <span class="val-txt" id="lbl-adsr-readout">A:0 D:9 S:0 R:0</span>
+                        </div>
+                        <div class="adsr-box">
+                            <canvas id="adsr-canvas" width="280" height="40"></canvas>
+                        </div>
+                        <div class="adsr-sliders">
+                            <div class="adsr-unit"><label>A</label><input type="range" id="inp-att" min="0" max="15" value="0"><span id="lbl-att">0</span></div>
+                            <div class="adsr-unit"><label>D</label><input type="range" id="inp-dec" min="0" max="15" value="9"><span id="lbl-dec">9</span></div>
+                            <div class="adsr-unit"><label>S</label><input type="range" id="inp-sus" min="0" max="15" value="0"><span id="lbl-sus">0</span></div>
+                            <div class="adsr-unit"><label>R</label><input type="range" id="inp-rel" min="0" max="15" value="0"><span id="lbl-rel">0</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Tick Macro Modulator -->
+                    <div class="t4-ctrl-block">
+                        <label class="t4-label">SUB-TICK MACRO MODULATOR:</label>
+                        <select id="sel-macro" class="t4-select-sm">
+                            <option value="P02" selected>P02: Pitch-Scoop (-2 Halbtöne)</option>
+                            <option value="V08">V08: Delayed Vibrato (5.5Hz LFO)</option>
+                            <option value="A-m7">A-m7: 50Hz Arp (Moll 7: +0, +3, +7, +10)</option>
+                            <option value="A-m9">A-m9: 50Hz Arp (Moll 9: +0, +3, +7, +14)</option>
+                            <option value="A-m11">A-m11: 50Hz Arp (Lightforce: +0, +3, +7, +17)</option>
+                            <option value="S12">S12: Slap-Bass Oktav-Pop (+12 HT)</option>
+                            <option value="D-SD">D-SD: Snare Interrupt (Stimme 3)</option>
+                            <option value="D-BD">D-BD: Kick Interrupt (Stimme 3)</option>
+                            <option value="none">Kein Macro (Statisch)</option>
+                        </select>
+                    </div>
+
+                    <!-- Master Filter Route -->
+                    <div class="t4-ctrl-block row-flex">
+                        <label class="t4-label">ANALOGES 6581 FILTER-ROUTING:</label>
+                        <input type="checkbox" id="chk-flt-route" checked>
+                    </div>
+
+                    <!-- Live Virtual Piano Keyboard for Active Motif -->
+                    <div class="t4-ctrl-block keyboard-block">
+                        <div class="lbl-row">
+                            <label class="t4-label">🎹 LIVE-TASTATUR (MOTIF-INSTRUMENT SPIELEN):</label>
+                            <div style="display:flex; gap:3px; align-items:center;">
+                                <button class="t4-btn-xs" id="btn-kb-oct-dn">-</button>
+                                <span id="lbl-kb-oct" style="font-size:0.56rem; font-weight:800;">OKT: 4</span>
+                                <button class="t4-btn-xs" id="btn-kb-oct-up">+</button>
+                            </div>
+                        </div>
+                        <div class="t4-piano-container" id="t4-piano-keys">
+                            <!-- Keys populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 4. BOTTOM OSCILLOSCOPE, MASTER FILTER & TELEMETRY BAR             -->
+        <!-- ================================================================= -->
+        <footer class="t4-footer">
+            <!-- 6581 Scope Visualizer -->
+            <div class="scope-box">
+                <canvas id="scope-canvas" width="220" height="32"></canvas>
+            </div>
+
+            <!-- Master MOS 6581 Analog Filter -->
+            <div class="master-filter-controls">
+                <span class="mfc-label">MOS 6581 MASTER FILTER:</span>
+                <select id="sel-flt-mode" class="t4-select-xs">
+                    <option value="0x2F" selected>12dB Bandpass ($2F)</option>
+                    <option value="0x1F">12dB Lowpass ($1F)</option>
+                    <option value="0x4F">12dB Highpass ($4F)</option>
+                    <option value="0x3F">Notch Filter ($3F)</option>
+                    <option value="0x0F">Bypass</option>
+                </select>
+                <div class="mfc-param">
+                    <label>CUTOFF:</label>
+                    <input type="range" id="inp-flt-cut" min="0" max="2047" value="1024">
+                </div>
+                <div class="mfc-param">
+                    <label>RES (Q):</label>
+                    <input type="range" id="inp-flt-res" min="0" max="15" value="14">
+                </div>
+                <div class="mfc-param">
+                    <label>DRIVE:</label>
+                    <input type="range" id="inp-flt-drive" min="0" max="10" value="3" title="6581 Sättigung">
+                </div>
+                <div class="mfc-param">
+                    <label>VOL:</label>
+                    <input type="range" id="inp-master-vol" min="0" max="100" value="85">
+                </div>
+            </div>
+
+            <div class="telemetry-stats">
+                <span class="t-badge" id="t-stat-step">STEP: 00 / 63</span>
+                <span class="t-badge" id="t-stat-frames">FRAME: 0000</span>
+                <span class="t-badge live">50.0 Hz PAL</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Help Modal (F1) -->
+    <div class="t4-modal-overlay" id="help-modal" style="display: none;">
+        <div class="t4-modal-content">
+            <div class="modal-head">
+                <h2>🎹 HUBBARD MOTIF TRACKER 4 • TASTENBEFEHLE & WORKFLOW</h2>
+                <button class="btn-close" id="btn-close-help">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <div class="grid-col">
+                        <h3>🎼 NOTENEINGABE & NAVIGATION</h3>
+                        <ul>
+                            <li><kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> ... : Noten spielen & eingeben</li>
+                            <li><kbd>1</kbd> oder <kbd>Caps</kbd> : Note-Off (===) eingeben</li>
+                            <li><kbd>Del</kbd> / <kbd>Backspace</kbd> : Feld leeren (...)</li>
+                            <li><kbd>↑</kbd> <kbd>↓</kbd> : Step hoch / runter</li>
+                            <li><kbd>Space</kbd> : Start / Stop (Song)</li>
+                            <li><kbd>Esc</kbd> : Stop</li>
+                        </ul>
+                    </div>
+                    <div class="grid-col">
+                        <h3>🎛️ MOTIF- & SPUR-STEUERUNG</h3>
+                        <ul>
+                            <li><kbd>F9</kbd> : Track 1 Mute / Unmute</li>
+                            <li><kbd>F10</kbd> : Track 2 Mute / Unmute</li>
+                            <li><kbd>F11</kbd> : Track 3 Mute / Unmute</li>
+                            <li><kbd>F12</kbd> : Alle Spuren aktivieren</li>
+                            <li><kbd>Ctrl+Z</kbd> : Rückgängig (Undo)</li>
+                            <li><kbd>Ctrl+Y</kbd> : Wiederholen (Redo)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="tracker4.js?v=4.0.0"></script>
+</body>
+</html>
