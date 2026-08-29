@@ -207,6 +207,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 ```
 
 ### 1. The Heroic Pulse Lead / PWM Solo Synth (`$41`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Commando Voice 1 (Heroic Lead)](audio_examples/inst_01_heroic_pulse_lead.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_01_heroic_pulse_lead.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_01_heroic_pulse_lead.mp3))*
 * **Vorkommen:** **19 von 19 SIDs (100%)** — Der absolute Signatur-Sound von Rob Hubbard.
 * **Register-Konfiguration:**
   * Wellenform: `$D404 = $41` (Puls + Gate).
@@ -216,6 +217,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Commando, Lightforce, Monty on the Run, Sanxion, Warhawk, Flash Gordon, Master of Magic, Thrust, The Human Race*.
 
 ### 2. The Funky 16th Slap-Bass / Octave-Pop (`$41` / `$21`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: IK+ Voice 3 (Slap Bass)](audio_examples/inst_02_slap_bass.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_02_slap_bass.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_02_slap_bass.mp3))*
 * **Vorkommen:** **18 von 19 SIDs (~95%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D412 = $41` mit extremer Schmalpulsbreite (`PW = $0250` ~15%) oder knackiger Sägezahn `$21`.
@@ -224,6 +226,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Commando, International Karate +, Monty on the Run, I-Ball, Chimera, Mega Apocalypse, Warhawk*.
 
 ### 3. The 50Hz Fast-Arpeggio Chord Generator (`$41` / `$21`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Delta Voice 2 (Space Arpeggio)](audio_examples/inst_03_arp_chord.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_03_arp_chord.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_03_arp_chord.mp3))*
 * **Vorkommen:** **18 von 19 SIDs (~95%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D40B = $41` (50% Rechteck) oder `$21` (Sägezahn).
@@ -236,6 +239,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Delta, Crazy Comets, Lightforce, Monty on the Run, Sanxion, IK+, Zoids, Kentilla*.
 
 ### 4. The Multiplexed Noise Snare Drum (`$81`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Commando Voice 3 (Noise Snare)](audio_examples/inst_04_noise_snare.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_04_noise_snare.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_04_noise_snare.mp3))*
 * **Vorkommen:** **17 von 19 SIDs (~90%)**.
 * **Register-Konfiguration:**
   * Stimme: Exklusiv auf Stimme 3 (`$D40E–$D414`) per Time-Division Multiplexing.
@@ -245,6 +249,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Commando, Monty on the Run, Warhawk, Sanxion, Mega Apocalypse, Flash Gordon, Chimera, Last V8*.
 
 ### 5. The Virtuoso Violin / Lead Sawtooth Guitar (`$21`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Monty on the Run Voice 1 (Violin Saw)](audio_examples/inst_05_virtuoso_violin.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_05_virtuoso_violin.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_05_virtuoso_violin.mp3))*
 * **Vorkommen:** **14 von 19 SIDs (~74%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D404 = $21` (Sägezahn + Gate).
@@ -253,6 +258,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Monty on the Run (Devil's Gallop), Sanxion, Mega Apocalypse, Warhawk, The Last V8, Knucklebusters*.
 
 ### 6. The Pitch-Drop Bass Kick Drum (`$11` / `$81`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Warhawk Voice 3 (Kick Drum)](audio_examples/inst_06_pitch_drop_kick.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_06_pitch_drop_kick.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_06_pitch_drop_kick.mp3))*
 * **Vorkommen:** **15 von 19 SIDs (~79%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D412 = $11` (Dreieck) oder `$81` (Rauschen).
@@ -261,6 +267,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Commando, Warhawk, Mega Apocalypse, I-Ball, Chimera, Flash Gordon*.
 
 ### 7. The Dark Triangle Sub-Bass (`$11`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Spellbound Voice 3 (Triangle Sub-Bass)](audio_examples/inst_07_triangle_sub_bass.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_07_triangle_sub_bass.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_07_triangle_sub_bass.mp3))*
 * **Vorkommen:** **12 von 19 SIDs (~63%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D412 = $11` (Reines Dreieck ohne Obertöne).
@@ -269,6 +276,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Spellbound, Delta, Master of Magic, Kentilla, Nemesis the Warlock*.
 
 ### 8. The Hard-Sync Metallic Laser / Overdrive Lead (`$43` / `$23`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: The Last V8 Voice 1 (Hard-Sync Overdrive)](audio_examples/inst_08_hardsync_laser.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_08_hardsync_laser.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_08_hardsync_laser.mp3))*
 * **Vorkommen:** **9 von 19 SIDs (~47%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D404 = $43` (Puls + Sync) oder `$23` (Sägezahn + Sync).
@@ -276,6 +284,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Delta, Crazy Comets, The Last V8, Zoids, Knucklebusters, Chimera*.
 
 ### 9. The Ring-Modulation Cyber Bell / Oriental Gong (`$15`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: IK+ Voice 1 (RingMod Bell)](audio_examples/inst_09_ringmod_bell.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_09_ringmod_bell.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_09_ringmod_bell.mp3))*
 * **Vorkommen:** **8 von 19 SIDs (~42%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$D404 = $15` (Dreieck + Ring-Modulation mit Stimme 3).
@@ -283,6 +292,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *International Karate +, Knucklebusters, Delta, Master of Magic, Zoids*.
 
 ### 10. The Pastoral Woodwind Flute (`$11` / narrow `$41`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Spellbound Voice 1 (Pastoral Flute)](audio_examples/inst_10_woodwind_flute.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_10_woodwind_flute.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_10_woodwind_flute.mp3))*
 * **Vorkommen:** **7 von 19 SIDs (~37%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$11` (Dreieck) oder Schmalpuls `$41` (`PW=$0150`).
@@ -290,6 +300,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Spellbound, Master of Magic, Kentilla, International Karate +*.
 
 ### 11. The Sacred Pipe Organ / Double-Stop (`$51` / `$31`)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Nemesis the Warlock (Pipe Organ)](audio_examples/inst_11_pipe_organ.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_11_pipe_organ.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_11_pipe_organ.mp3))*
 * **Vorkommen:** **5 von 19 SIDs (~26%)**.
 * **Register-Konfiguration:**
   * Wellenform: Kombinierte Wellenformen `$51` (Puls + Dreieck) oder `$31` (Säge + Dreieck).
@@ -297,6 +308,7 @@ Die folgende systematische Analyse deckt **alle 12 charakteristischen Instrument
 * **Typische Stücke:** *Nemesis the Warlock, Master of Magic, Knucklebusters*.
 
 ### 12. The Ambient Space Filter-Pad (`$41` + Bandpass-Sweep)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Delta Voice 1 (Ambient Filter-Pad)](audio_examples/inst_12_ambient_filter_pad.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/inst_12_ambient_filter_pad.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/inst_12_ambient_filter_pad.mp3))*
 * **Vorkommen:** **6 von 19 SIDs (~32%)**.
 * **Register-Konfiguration:**
   * Wellenform: `$41` Puls mit langsamer PWM-Drift, weicher Attack (`A=4..7`), langer Release (`R=6..10`).
@@ -335,76 +347,91 @@ Rob Hubbards unverwechselbare Handschrift speist sich aus **15 zentralen komposi
 ```
 
 ### 1. 50Hz Mikro-Arpeggios (Polyphone Akkord-Illusion)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Delta (50Hz Arp-Akkorde)](audio_examples/style_01_50hz_micro_arpeggio.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_01_50hz_micro_arpeggio.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_01_50hz_micro_arpeggio.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️⭐️ (100% – Grundpfeiler des Hubbard-Sounds).
 * **Beschreibung:** Tauscht in jedem Raster-Interrupt (alle 20ms) die Frequenz einer einzelnen Stimme zyklisch zwischen 3–6 Akkordstufen aus. Simuliert vollwertige 4-stimmige Jazz- und Pop-Akkorde auf einer Monospur.
 * **Referenzstücke:** *Delta, Crazy Comets, Monty on the Run, Lightforce, Sanxion, IK+*.
 
 ### 2. Voice-3 Time-Division Multiplexing (Drum-Interleaving)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Commando (Voice 3 Drum Interleaving)](audio_examples/style_02_drum_multiplexing.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_02_drum_multiplexing.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_02_drum_multiplexing.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️⭐️ (95% – 18/19 SIDs).
 * **Beschreibung:** Teilt Stimme 3 dynamisch zwischen Bassline und Drums auf. Snare- und Kick-Hits unterbrechen die Bassline für exakt 2 bis 4 Frames (40–80ms) und springen sofort phasenrein auf die Bassline zurück.
 * **Referenzstücke:** *Commando, Monty, Warhawk, Mega Apocalypse, Sanxion, Flash Gordon*.
 
 ### 3. Kontinuierliche PWM-LFO Modulation (Breiter Stereo/Chorus-Effekt)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Lightforce (PWM Chorus Sweep)](audio_examples/style_03_pwm_lfo_modulation.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_03_pwm_lfo_modulation.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_03_pwm_lfo_modulation.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️⭐️ (95% – 18/19 SIDs).
 * **Beschreibung:** Ein interner LFO-Algorithmus moduliert die 12-Bit Pulsbreite kontinuierlich zwischen 10% und 90%. Erzeugt einen schwebenden, organischen Flanging- und Chorus-Charakter ohne externe Hardware.
 * **Referenzstücke:** *Lightforce, Master of Magic, Sanxion, Commando, Kentilla*.
 
 ### 4. Heroic Pitch-Scooping (Noten-Einschwing-Glissando)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Flash Gordon (Pitch-Scoop Leads)](audio_examples/style_04_heroic_pitch_scoop.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_04_heroic_pitch_scoop.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_04_heroic_pitch_scoop.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️⭐️ (90% – 17/19 SIDs).
 * **Beschreibung:** Jede neue Melodienote startet im ersten Frame 2 Halbtöne tiefer und gleitet in 2–3 Frames (40–60ms) auf die Zieltonhöhe. Verleiht Lead-Melodien den heroischen, expressiven Synthie-Brass-Charakter.
 * **Referenzstücke:** *Commando, Flash Gordon, Warhawk, Lightforce, Master of Magic*.
 
 ### 5. Delayed Vibrato & Expressive Pitch-LFO
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Monty on the Run (Delayed Vibrato)](audio_examples/style_05_delayed_vibrato.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_05_delayed_vibrato.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_05_delayed_vibrato.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️ (85% – 16/19 SIDs).
 * **Beschreibung:** Vibrato setzt erst nach 200–300ms Haltezeit ein (verzögertes Einschwingen wie bei einem echten Geiger oder Sänger). Verhindert, dass schnelle Läufe matschig klingen, und verleiht langen Tönen Glanz.
 * **Referenzstücke:** *Monty on the Run, Spellbound, Lightforce, Sanxion, IK+*.
 
 ### 6. Slap-Bass Oktav-Popping & Ghost-Notes
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: International Karate + (Slap Bass Popping)](audio_examples/style_06_slap_bass_octave_pop.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_06_slap_bass_octave_pop.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_06_slap_bass_octave_pop.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️ (80% – 15/19 SIDs).
 * **Beschreibung:** Schnelle 16tel-Basslinien mit hartem perkussivem Anschlag, synkopierten Oktavsprüngen (+12 Halbtöne) und rhythmischen Ghost-Notes.
 * **Referenzstücke:** *International Karate +, Commando, Monty on the Run, I-Ball, Chimera*.
 
 ### 7. Rasende 32tel Virtuosen-Läufe & Skalenketten
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Monty on the Run (Devil's Gallop Runs)](audio_examples/style_07_32nd_scale_runs.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_07_32nd_scale_runs.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_07_32nd_scale_runs.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️ (75% – 14/19 SIDs).
 * **Beschreibung:** Pfeilschnelle 32tel-Läufe über 2 bis 3 Oktaven, inspiriert von Paganini, Bach und klassischer Violintechnik ("Devil's Gallop").
 * **Referenzstücke:** *Monty on the Run, Mega Apocalypse, Sanxion, Warhawk, Knucklebusters*.
 
 ### 8. Analoge 11-Bit Resonanz-Filter-Sweeps
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Sanxion (Resonance Filter Sweep)](audio_examples/style_08_filter_sweeps.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_08_filter_sweeps.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_08_filter_sweeps.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️ (70% – 13/19 SIDs).
 * **Beschreibung:** Durchfahren der Cutoff-Frequenz ($D415/$D416) bei hoher Filter-Resonanz ($D417=$F7) im 12dB Bandpass-Modus ($D418=$2F).
 * **Referenzstücke:** *Delta, Sanxion, Spellbound, Master of Magic, Knucklebusters*.
 
 ### 9. Modale Harmonik & Dorische Sexte (Dorian 6th)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Lightforce (Dorian 6th Chords)](audio_examples/style_09_dorian_6th_harmony.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_09_dorian_6th_harmony.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_09_dorian_6th_harmony.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️⭐️ (70% – 13/19 SIDs).
 * **Beschreibung:** Bevorzugung des dorischen Modus mit der markanten **großen Sexte**, kombiniert mit Moll-9- und Moll-11-Akkorden für schwebende Fusion-Stimmungen.
 * **Referenzstücke:** *Lightforce, International Karate +, Kentilla, Delta*.
 
 ### 10. Barocke Quintfallsequenzen & 4-3 Vorhalte
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Spellbound (Circle of Fifths)](audio_examples/style_10_circle_of_fifths.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_10_circle_of_fifths.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_10_circle_of_fifths.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️ (65% – 12/19 SIDs).
 * **Beschreibung:** Strenge klassische Kadenzen nach dem Muster $i \to iv \to VII \to III \to VI \to ii^\circ \to V \to i$, angereichert mit barocken Vorhaltsauflösungen ($4 \to 3$ und $9 \to 8$).
 * **Referenzstücke:** *Spellbound, Master of Magic, Kentilla, Nemesis the Warlock*.
 
 ### 11. Kontrapunktische Call-and-Response Dialoge
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Flash Gordon (Call & Response)](audio_examples/style_11_call_and_response.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_11_call_and_response.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_11_call_and_response.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️ (55% – 11/19 SIDs).
 * **Beschreibung:** Stimme 1 wirft ein melodisches Motiv ein, Stimme 2 antwortet in den Spielpausen mit einem Gegenmotiv oder einer chromatischen Umspielung.
 * **Referenzstücke:** *Flash Gordon, Lightforce, Knucklebusters, Chimera*.
 
 ### 12. Hard-Sync & Ring-Modulation Formantverzerrung
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: The Last V8 (Hard-Sync Laser FX)](audio_examples/style_12_hardsync_ringmod_fx.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_12_hardsync_ringmod_fx.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_12_hardsync_ringmod_fx.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️ (50% – 10/19 SIDs).
 * **Beschreibung:** Hardware-Phasenkopplung und Ringmultiplikation zur Erzeugung von futuristischen Laser-Effekten, metallischen Gongs und verzerrten Cyber-Sounds.
 * **Referenzstücke:** *Delta, The Last V8, Crazy Comets, Zoids, International Karate +*.
 
 ### 13. Asymmetrische Polyrhythmik (5/4-Takt & Phasenverschiebung)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Delta (5/4 Polyrhythmik)](audio_examples/style_13_polyrhythms_5_4.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_13_polyrhythms_5_4.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_13_polyrhythms_5_4.mp3))*
 * **Relevanz:** ⭐️⭐️⭐️ (45% – 9/19 SIDs).
 * **Beschreibung:** Ungerade Taktarten (5/4-Metrik in *Delta*), Polyrhythmen (3 gegen 4) und Phasenverschiebungen nach dem Vorbild von Philip Glass und Steve Reich.
 * **Referenzstücke:** *Delta, Knucklebusters, Chimera*.
 
 ### 14. Ghost-Arpeggios & Software-Echo (Tape Delay Simulation)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Master of Magic (Ghost-Arp Echo)](audio_examples/style_14_software_echo_delay.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_14_software_echo_delay.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_14_software_echo_delay.mp3))*
 * **Relevanz:** ⭐️⭐️ (40% – 8/19 SIDs).
 * **Beschreibung:** Wiederholung von Melodietönen auf 16tel-Offbeats mit reduzierter Sustain-Lautstärke und Filterung, um ein analoges Tape-Delay zu imitieren.
 * **Referenzstücke:** *Master of Magic, Delta, Spellbound, Knucklebusters*.
 
 ### 15. Tierce de Picardie (Triumphale Dur-Schlüsse in Moll-Werken)
+* **Hörbeispiel:** 🔊 **[▶ MP3 anhören: Spellbound (Tierce de Picardie)](audio_examples/style_15_tierce_de_picardie.mp3)** • *(Lokal: [Datei öffnen](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/audio_examples/style_15_tierce_de_picardie.mp3) | Web: [Browser Stream](http://localhost:8080/audio_examples/style_15_tierce_de_picardie.mp3))*
 * **Relevanz:** ⭐️⭐️ (35% – 7/19 SIDs).
 * **Beschreibung:** Unerwartete Auflösung eines schwermütigen Moll-Themas in einen strahlenden Dur-Akkord am Phrasen- oder Song-Ende (z. B. von C-Moll nach C-Dur).
 * **Referenzstücke:** *Master of Magic, Spellbound, Kentilla, Nemesis the Warlock*.
