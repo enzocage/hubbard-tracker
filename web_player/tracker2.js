@@ -408,14 +408,59 @@
     const htfRegGrid = document.getElementById("htf-reg-grid");
     const adsrCanvas = document.getElementById("adsr-canvas");
 
-    // Render Order List Blocks
+    const SECTION_NAMES = [
+        "INTRO", "THEME A", "SOLO LEAD", "THEME B", 
+        "BRIDGE", "CLIMAX", "VARIATION", "OUTRO", "SOLO 2", "FINALE"
+    ];
+
+    // Calculate note density for 3 tracks in a pattern
+    function getPatternDensity(patIdx) {
+        const pat = htfState.patterns[patIdx];
+        if (!pat) return { t1: 0, t2: 0, t3: 0, total: 0 };
+        let c1 = 0, c2 = 0, c3 = 0;
+        pat.forEach(r => {
+            if (r.t1 && r.t1.note && r.t1.note !== "..." && r.t1.note !== "===") c1++;
+            if (r.t2 && r.t2.note && r.t2.note !== "..." && r.t2.note !== "===") c2++;
+            if (r.t3 && r.t3.note && r.t3.note !== "..." && r.t3.note !== "===") c3++;
+        });
+        return {
+            t1: Math.min(100, Math.round((c1 / 64) * 100)),
+            t2: Math.min(100, Math.round((c2 / 64) * 100)),
+            t3: Math.min(100, Math.round((c3 / 64) * 100)),
+            total: c1 + c2 + c3
+        };
+    }
+
+    // Render Rich Song Timeline Cards
     function renderOrderList() {
         orderSlotsContainer.innerHTML = "";
+        const durPerPat = 64 * htfState.speed * 0.02;
+
         htfState.orderList.forEach((patIdx, idx) => {
+            const density = getPatternDensity(patIdx);
+            const sectionName = SECTION_NAMES[idx % SECTION_NAMES.length];
+
             const slot = document.createElement("div");
             slot.className = `order-slot ${idx === htfState.activeOrderIdx ? "active" : ""}`;
+            slot.id = `order-slot-${idx}`;
             slot.dataset.order = idx;
-            slot.textContent = `${String(idx).padStart(2, '0')}: P${String(patIdx).padStart(2, '0')}`;
+            slot.title = `Slot #${idx} • Pattern P${String(patIdx).padStart(2, '0')} (${sectionName}) • Klicken zum Bearbeiten`;
+
+            slot.innerHTML = `
+                <div class="os-head">
+                    <span class="os-idx">#${String(idx).padStart(2, '0')}</span>
+                    <span class="os-section">${sectionName}</span>
+                </div>
+                <div class="os-main">
+                    <span class="os-pat-id">P${String(patIdx).padStart(2, '0')}</span>
+                    <span class="os-bars">4 Takte • ${durPerPat.toFixed(1)}s</span>
+                </div>
+                <div class="os-density-bars" title="Spur-Dichte: T1 ${density.t1}%, T2 ${density.t2}%, T3 ${density.t3}%">
+                    <div class="os-d-row"><div class="os-d-fill t1" style="width: ${Math.max(5, density.t1)}%"></div></div>
+                    <div class="os-d-row"><div class="os-d-fill t2" style="width: ${Math.max(5, density.t2)}%"></div></div>
+                    <div class="os-d-row"><div class="os-d-fill t3" style="width: ${Math.max(5, density.t3)}%"></div></div>
+                </div>
+            `;
             
             slot.addEventListener("click", () => {
                 htfState.activeOrderIdx = idx;
@@ -441,7 +486,40 @@
         loopTag.textContent = "↺ LOOP";
         orderSlotsContainer.appendChild(loopTag);
 
-        document.getElementById("order-sub-stat").textContent = `${htfState.orderList.length} PHRASEN • ${htfState.orderList.length * 4} TAKTE • ${(htfState.orderList.length * 7.68).toFixed(1)}s`;
+        const totalSec = htfState.orderList.length * durPerPat;
+        const totalMin = Math.floor(totalSec / 60);
+        const remSec = String(Math.floor(totalSec % 60)).padStart(2, '0');
+        document.getElementById("order-sub-stat").textContent = `${htfState.orderList.length} PHRASEN • ${htfState.orderList.length * 4} TAKTE • ${totalMin}:${remSec} MIN • ${htfState.patterns.length} PATTERNS IM POOL`;
+
+        renderPatternPool();
+    }
+
+    // Render Pattern Pool Bar
+    function renderPatternPool() {
+        const poolContainer = document.getElementById("pattern-pool-container");
+        if (!poolContainer) return;
+        poolContainer.innerHTML = "";
+
+        htfState.patterns.forEach((pat, pIdx) => {
+            const density = getPatternDensity(pIdx);
+            const item = document.createElement("div");
+            item.className = `pool-item ${pIdx === htfState.activePatternIdx ? "active" : ""}`;
+            item.innerHTML = `
+                <span>P${String(pIdx).padStart(2, '0')}</span>
+                <span class="pool-notes-count">${density.total} ♫</span>
+            `;
+            item.title = `Pattern P${String(pIdx).padStart(2, '0')} • ${density.total} Noten • Klicken zum Bearbeiten`;
+
+            item.addEventListener("click", () => {
+                htfState.activePatternIdx = pIdx;
+                document.getElementById("sel-active-pat").value = pIdx;
+                renderOrderList();
+                renderHTFGrid();
+                update6502Disassembly();
+            });
+
+            poolContainer.appendChild(item);
+        });
     }
 
     // Render 3-Track HTF Matrix Grid
@@ -1289,6 +1367,30 @@
             }
         });
 
+        // Add New Pattern to Pool
+        const btnNewPat = document.getElementById("btn-new-pattern");
+        if (btnNewPat) {
+            btnNewPat.addEventListener("click", () => {
+                saveUndoState();
+                const newPatIdx = htfState.patterns.length;
+                htfState.patterns.push(generateDefaultHTFPattern());
+                htfState.activePatternIdx = newPatIdx;
+                
+                const sel = document.getElementById("sel-active-pat");
+                const opt = document.createElement("option");
+                opt.value = newPatIdx;
+                opt.textContent = `P${String(newPatIdx).padStart(2, '0')}: Neue Phrase`;
+                sel.appendChild(opt);
+                sel.value = newPatIdx;
+
+                isPatternModified = true;
+                scheduleBackgroundAudioUpdate();
+                renderOrderList();
+                renderHTFGrid();
+                update6502Disassembly();
+            });
+        }
+
         // Toolkit Actions
         document.getElementById("btn-undo").addEventListener("click", applyUndo);
         document.getElementById("btn-redo").addEventListener("click", applyRedo);
@@ -1638,6 +1740,8 @@
 
             htfState.activePatternIdx = 0;
             htfState.currentStep = 0;
+            htfState.orderList = (data.order_list && data.order_list.length > 0) ? data.order_list : htfState.patterns.map((_, idx) => idx);
+            htfState.activeOrderIdx = 0;
 
             document.getElementById("htf-sub-info").textContent = `${htfState.title.toUpperCase()} • ${htfState.author} (1985) • 3 Voices PAL 50Hz`;
             document.getElementById("inp-bpm").value = htfState.bpm;

@@ -70,24 +70,40 @@
         </header>
 
         <!-- ================================================================= -->
-        <!-- 2. MODULAR SONG ARRANGER & TIMELINE MATRIX                         -->
+        <!-- 2. MODULAR SONG ARRANGER & TIMELINE MATRIX (ALL PATTERNS OVERVIEW) -->
         <!-- ================================================================= -->
         <div class="htf-order-bar">
-            <div class="order-label-group">
-                <span class="order-tag">SONG-ARRANGEMENT (ORDER LIST):</span>
-                <span class="order-sub" id="order-sub-stat">4 PHRASEN • 16 TAKTE • 0:30 MIN</span>
+            <div class="order-top-row">
+                <div class="order-label-group">
+                    <span class="order-tag">🎼 GESAMTES SONG-ARRANGEMENT & TIMELINE:</span>
+                    <span class="order-sub" id="order-sub-stat">8 PHRASEN • 32 TAKTE • 1:01 MIN</span>
+                </div>
+                
+                <div class="order-actions">
+                    <button class="btn-xs btn-highlight" id="btn-add-order" title="Gewähltes Pattern am Ende anfügen">+ SLOT</button>
+                    <button class="btn-xs" id="btn-dup-order" title="Ausgewählten Slot duplizieren">⧉ DUPLIZIEREN</button>
+                    <button class="btn-xs btn-del" id="btn-del-order" title="Ausgewählten Slot löschen">🗑️ LÖSCHEN</button>
+                    <button class="btn-xs" id="btn-move-left" title="Slot nach links verschieben">◄ LINKS</button>
+                    <button class="btn-xs" id="btn-move-right" title="Slot nach rechts verschieben">RECHTS ►</button>
+                </div>
             </div>
             
-            <div class="order-slots" id="order-slots-container">
-                <!-- Populated dynamically by JS -->
+            <!-- Horizontal Scrollable Song Timeline with Rich Pattern Cards -->
+            <div class="order-timeline-scroll">
+                <div class="order-slots" id="order-slots-container">
+                    <!-- Populated dynamically by JS -->
+                </div>
             </div>
 
-            <div class="order-actions">
-                <button class="btn-xs" id="btn-add-order" title="Neuen Pattern-Slot am Ende anfügen">+ SLOT</button>
-                <button class="btn-xs" id="btn-dup-order" title="Aktuellen Slot duplizieren">⧉ DUPLIZIEREN</button>
-                <button class="btn-xs btn-del" id="btn-del-order" title="Aktuellen Slot löschen">🗑️ LÖSCHEN</button>
-                <button class="btn-xs" id="btn-move-left" title="Slot nach links verschieben">◄</button>
-                <button class="btn-xs" id="btn-move-right" title="Slot nach rechts verschieben">►</button>
+            <!-- Pattern Pool Grid Bar: Shows all unique patterns in project -->
+            <div class="pattern-pool-bar">
+                <div class="pool-left">
+                    <span class="pool-tag">🗂️ PATTERN-POOL (ALLE VERFÜGBAREN PATTERNS):</span>
+                    <div class="pool-items" id="pattern-pool-container">
+                        <!-- Populated dynamically by JS -->
+                    </div>
+                </div>
+                <button class="btn-xs btn-new-pat" id="btn-new-pattern" title="Neues leeres Pattern zum Pool hinzufügen">+ NEUES PATTERN</button>
             </div>
         </div>
 
@@ -534,6 +550,6 @@
     </div>
 
     <!-- HTF Engine Script -->
-    <script src="tracker2.js?v=2.0.2"></script>
+    <script src="tracker2.js?v=2.0.3"></script>
 </body>
 </html>

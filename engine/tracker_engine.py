@@ -173,7 +173,7 @@ class HubbardTrackerDecompiler:
         self.sid_path = sid_path
         self.extractor = SIDExtractor(sid_path)
 
-    def decompile_to_tracker(self, num_patterns=4, rows_per_pattern=64, frames_per_row=6):
+    def decompile_to_tracker(self, num_patterns=8, rows_per_pattern=64, frames_per_row=6):
         """
         Decompiles captured 50Hz SID execution into Tracker patterns.
         """
@@ -232,18 +232,20 @@ class HubbardTrackerDecompiler:
             "bpm": 125,
             "speed": 6,
             "instruments": HUBBARD_DEFAULT_INSTRUMENTS,
-            "patterns": patterns
+            "patterns": patterns,
+            "order_list": list(range(len(patterns)))
         }
 
-def patch_original_sid_stream(sid_path, patterns, speed=6, num_frames=2400):
+def patch_original_sid_stream(sid_path, patterns, speed=6, num_frames=3072):
     """
     Takes the 100% bit-exact original 50Hz register frame capture from the SID file
     and micro-patches user edits (pitch modifications, note-offs) into the stream
     while keeping all original master filters, PWM sweeps, ringmod, sync, and
     analog envelope characteristics 100% intact.
     """
+    needed_frames = max(num_frames, len(patterns) * 64 * speed)
     extractor = SIDExtractor(sid_path)
-    original_frames = extractor.capture_frames(num_frames=num_frames)
+    original_frames = extractor.capture_frames(num_frames=needed_frames)
     
     patched_frames = []
     for f in original_frames:
