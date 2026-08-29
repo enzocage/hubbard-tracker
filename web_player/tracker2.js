@@ -247,71 +247,131 @@
         if (freq <= 0) return;
 
         const now = audioCtx.currentTime;
-        const isNoise = (inst.wave & 0x80) !== 0;
+    function noteToMidi(noteStr) {
+        if (!noteStr || noteStr === "..." || noteStr === "===" || noteStr.length < 3) return 60;
+        const name = noteStr.slice(0, -1);
+        const oct = parseInt(noteStr.slice(-1));
+        const semi = NOTE_NAMES.indexOf(name);
+        if (semi === -1 || isNaN(oct)) return 60;
+        return (oct + 1) * 12 + semi;
+    }
+
+    // =========================================================================
+    // 100% AKUSTISCHER WYSIWYG-ENGINE (ORIGINAL-KLANGEREIGNISSE)
+    // =========================================================================
+    
+    // Audition the exact original sound event from the SID at this step & track
+    function auditionCellOriginalSound(stepIdx, trackIdx) {
+        initAudio();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        if (!authenticAudioBuffer) return;
+
+        const pat = htfState.patterns[htfState.activePatternIdx];
+        if (!pat || !pat[stepIdx]) return;
+        const cell = pat[stepIdx][`t${trackIdx}`];
+        if (!cell || cell.note === "..." || cell.note === "===") return;
+
+        let durFrames = 6;
+        if (cell.dur && cell.dur.startsWith("L")) {
+            durFrames = parseInt(cell.dur.slice(1)) || 6;
+        }
+        const durSec = Math.max(0.14, durFrames * 0.02);
+        const stepStartSec = (htfState.activePatternIdx * 64 + stepIdx) * htfState.speed * 0.02;
+
+        try {
+            const src = audioCtx.createBufferSource();
+            src.buffer = authenticAudioBuffer;
+            
+            const gain = audioCtx.createGain();
+            gain.gain.value = 1.0;
+            src.connect(gain);
+            gain.connect(voiceGainNodes[trackIdx] || masterGainNode);
+
+            // Flash VU meter
+            const vuEl = document.getElementById(`vu-fill-${trackIdx}`);
+            if (vuEl) {
+                vuEl.style.width = "100%";
+                setTimeout(() => { vuEl.style.width = "0%"; }, 150);
+            }
+
+            src.start(0, stepStartSec, durSec);
+        } catch (e) {
+            console.warn("WYSIWYG Audition slice error:", e);
+        }
+    }
+
+    // Play note on keyboard using pitch-shifted authentic audio slice of the original SID instrument
+    function playLiveSound(noteStr, inst) {
+        initAudio();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const targetMidi = noteToMidi(noteStr);
+        const trackIdx = htfState.cursorTrack || 1;
 
         // Flash active VU Meter
-        const vuEl = document.getElementById(`vu-fill-${htfState.cursorTrack}`);
+        const vuEl = document.getElementById(`vu-fill-${trackIdx}`);
         if (vuEl) {
             vuEl.style.width = "100%";
-            setTimeout(() => { vuEl.style.width = "0%"; }, 120);
+            setTimeout(() => { vuEl.style.width = "0%"; }, 150);
         }
 
-        if (isNoise) {
-            const bufSize = audioCtx.sampleRate * 0.12;
-            const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-            const data = buf.getChannelData(0);
-            for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = buf;
-            const env = audioCtx.createGain();
-            env.gain.setValueAtTime(0.7, now);
-            env.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-            noise.connect(env);
-            env.connect(voiceGainNodes[htfState.cursorTrack] || masterGainNode);
-            noise.start(now);
-            noise.stop(now + 0.12);
-            return;
+        // If authenticAudioBuffer is available, find a representative slice of this track's instrument and pitch-shift it
+        if (authenticAudioBuffer) {
+            // Find the first step in the pattern that has a note on this track to use as authentic reference slice
+            let refStep = 0;
+            let refNote = "C-4";
+            const pat = htfState.patterns[htfState.activePatternIdx];
+            if (pat) {
+                for (let s = 0; s < pat.length; s++) {
+                    const c = pat[s][`t${trackIdx}`];
+                    if (c && c.note !== "..." && c.note !== "===") {
+                        refStep = s;
+                        refNote = c.note;
+                        break;
+                    }
+                }
+            }
+
+            const refMidi = noteToMidi(refNote);
+            const semitoneDelta = targetMidi - refMidi;
+            const rate = Math.pow(2.0, semitoneDelta / 12.0);
+            const refStartSec = (htfState.activePatternIdx * 64 + refStep) * htfState.speed * 0.02;
+            const sliceDurSec = 0.45;
+
+            try {
+                const src = audioCtx.createBufferSource();
+                src.buffer = authenticAudioBuffer;
+                src.playbackRate.value = Math.max(0.1, Math.min(8.0, rate));
+
+                const env = audioCtx.createGain();
+                const now = audioCtx.currentTime;
+                env.gain.setValueAtTime(0.9, now);
+                env.gain.exponentialRampToValueAtTime(0.001, now + sliceDurSec);
+
+                src.connect(env);
+                env.connect(voiceGainNodes[trackIdx] || masterGainNode);
+
+                src.start(now, refStartSec, sliceDurSec);
+                return;
+            } catch (e) {
+                console.warn("WYSIWYG playback rate error, fallback to synth:", e);
+            }
         }
 
+        // Fallback if buffer not loaded yet
+        const freq = noteToHz(noteStr);
+        if (freq <= 0) return;
+        const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const env = audioCtx.createGain();
-
-        if (inst.wave === 0x21) osc.type = "sawtooth";
-        else if (inst.wave === 0x11 || inst.wave === 0x15) osc.type = "triangle";
-        else osc.type = "square";
-
-        if (inst.macro === "scoop") {
-            osc.frequency.setValueAtTime(freq * 0.89, now);
-            osc.frequency.exponentialRampToValueAtTime(freq, now + 0.08);
-        } else if (inst.macro === "vibrato") {
-            osc.frequency.setValueAtTime(freq, now);
-            const vibLfo = audioCtx.createOscillator();
-            const vibGain = audioCtx.createGain();
-            vibLfo.frequency.value = 5.5;
-            vibGain.gain.setValueAtTime(0, now);
-            vibGain.gain.setValueAtTime(freq * 0.02, now + 0.16);
-            vibLfo.connect(vibGain);
-            vibGain.connect(osc.frequency);
-            vibLfo.start(now);
-            vibLfo.stop(now + 0.5);
-        } else {
-            osc.frequency.setValueAtTime(freq, now);
-        }
-
-        const att = Math.max(0.002, inst.attack * 0.04);
-        const dec = Math.max(0.02, inst.decay * 0.06);
-        const sus = Math.max(0.01, (inst.sustain / 15.0) * 0.5);
-
-        env.gain.setValueAtTime(0.0001, now);
-        env.gain.linearRampToValueAtTime(0.5, now + att);
-        env.gain.exponentialRampToValueAtTime(sus, now + att + dec);
-        env.gain.exponentialRampToValueAtTime(0.0001, now + att + dec + 0.35);
-
+        osc.type = inst.wave === 0x21 ? "sawtooth" : (inst.wave === 0x11 ? "triangle" : "square");
+        osc.frequency.setValueAtTime(freq, now);
+        env.gain.setValueAtTime(0.5, now);
+        env.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
         osc.connect(env);
-        env.connect(voiceGainNodes[htfState.cursorTrack] || masterGainNode);
-
+        env.connect(voiceGainNodes[trackIdx] || masterGainNode);
         osc.start(now);
-        osc.stop(now + att + dec + 0.4);
+        osc.stop(now + 0.35);
     }
 
     // =========================================================================
@@ -409,6 +469,9 @@
                     // If cell has instrument, select it
                     const instId = parseInt(tData.inst);
                     if (instId > 0) selectInstrument(instId);
+
+                    // 100% Acoustic WYSIWYG Audition of the exact original sound at this position
+                    auditionCellOriginalSound(s, t);
                 });
 
                 rowDiv.appendChild(trackCol);
@@ -466,11 +529,44 @@
         renderHTFGrid();
         update6502Disassembly();
 
+        // Background update of authentic micro-patched audio buffer
+        scheduleBackgroundAudioUpdate();
+
         if (htfState.step > 0) {
             htfState.currentStep = Math.min(63, htfState.currentStep + htfState.step);
             highlightCursor();
             scrollToStep(htfState.currentStep);
         }
+    }
+
+    let backgroundUpdateTimer = null;
+    function scheduleBackgroundAudioUpdate() {
+        if (backgroundUpdateTimer) clearTimeout(backgroundUpdateTimer);
+        backgroundUpdateTimer = setTimeout(async () => {
+            if (!isPatternModified) return;
+            try {
+                const payload = {
+                    sid_path: document.getElementById("htf-sid-select").value,
+                    active_pattern: htfState.activePatternIdx,
+                    speed: htfState.speed,
+                    instruments: htfState.instruments,
+                    patterns: htfState.patterns,
+                    voice_mask: [!voiceMute[1], !voiceMute[2], !voiceMute[3]]
+                };
+                const res = await fetch("/api/render_tracker_pattern", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const ab = await res.arrayBuffer();
+                    authenticAudioBuffer = await audioCtx.decodeAudioData(ab);
+                    isPatternModified = false;
+                }
+            } catch(e) {
+                console.error("Background audio update error:", e);
+            }
+        }, 300);
     }
 
     // Render Instrument List
@@ -1289,6 +1385,7 @@
                 highlightCursor();
                 scrollToStep(htfState.currentStep);
                 update6502Disassembly();
+                auditionCellOriginalSound(htfState.currentStep, htfState.cursorTrack);
                 return;
             }
             if (e.code === "ArrowDown") {
@@ -1297,18 +1394,21 @@
                 highlightCursor();
                 scrollToStep(htfState.currentStep);
                 update6502Disassembly();
+                auditionCellOriginalSound(htfState.currentStep, htfState.cursorTrack);
                 return;
             }
             if (e.code === "ArrowLeft") {
                 e.preventDefault();
                 htfState.cursorTrack = Math.max(1, htfState.cursorTrack - 1);
                 highlightCursor();
+                auditionCellOriginalSound(htfState.currentStep, htfState.cursorTrack);
                 return;
             }
             if (e.code === "ArrowRight") {
                 e.preventDefault();
                 htfState.cursorTrack = Math.min(3, htfState.cursorTrack + 1);
                 highlightCursor();
+                auditionCellOriginalSound(htfState.currentStep, htfState.cursorTrack);
                 return;
             }
 
