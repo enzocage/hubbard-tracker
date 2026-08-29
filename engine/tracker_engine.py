@@ -31,9 +31,11 @@ def freq_to_note_str(f_raw):
     return f"{name}{octave}"
 
 def note_str_to_freq(note_str):
-    if not note_str or note_str == "...":
+    if not note_str or note_str == "..." or note_str == "===" or len(note_str) < 3:
         return 0
     note_part = note_str[:-1]
+    if not note_str[-1].isdigit():
+        return 0
     octave = int(note_str[-1])
     if note_part not in NOTE_NAMES:
         return 0
@@ -232,3 +234,96 @@ class HubbardTrackerDecompiler:
             "instruments": HUBBARD_DEFAULT_INSTRUMENTS,
             "patterns": patterns
         }
+
+def patch_original_sid_stream(sid_path, patterns, speed=6, num_frames=2400):
+    """
+    Takes the 100% bit-exact original 50Hz register frame capture from the SID file
+    and micro-patches user edits (pitch modifications, note-offs) into the stream
+    while keeping all original master filters, PWM sweeps, ringmod, sync, and
+    analog envelope characteristics 100% intact.
+    """
+    extractor = SIDExtractor(sid_path)
+    original_frames = extractor.capture_frames(num_frames=num_frames)
+    
+    patched_frames = []
+    for f in original_frames:
+        patched_frames.append({
+            "frame": f["frame"],
+            "deltas": dict(f["deltas"]),
+            "state": list(f["state"])
+        })
+        
+    for p_idx, rows in enumerate(patterns):
+        for r_idx, row in enumerate(rows):
+            start_f = (p_idx * 64 + r_idx) * speed
+            end_f = start_f + speed
+            if start_f >= len(patched_frames):
+                break
+            end_f = min(len(patched_frames), end_f)
+
+            orig_state_at_start = original_frames[start_f]["state"]
+
+            # Voice 1
+            t1 = row.get("t1", {})
+            n1 = t1.get("note", "...")
+            if n1 and n1 != "..." and n1 != "===":
+                target_f1 = note_str_to_freq(n1)
+                orig_f1 = orig_state_at_start[0] | (orig_state_at_start[1] << 8)
+                if target_f1 > 0:
+                    ratio = (target_f1 / orig_f1) if orig_f1 > 0 else 1.0
+                    for f in range(start_f, end_f):
+                        curr_f = patched_frames[f]["state"][0] | (patched_frames[f]["state"][1] << 8)
+                        new_f = int(round(curr_f * ratio)) if orig_f1 > 0 else target_f1
+                        new_f = min(0xFFFF, max(0, new_f))
+                        patched_frames[f]["state"][0] = new_f & 0xFF
+                        patched_frames[f]["state"][1] = (new_f >> 8) & 0xFF
+                        patched_frames[f]["deltas"][0] = new_f & 0xFF
+                        patched_frames[f]["deltas"][1] = (new_f >> 8) & 0xFF
+            elif n1 == "===":
+                for f in range(start_f, end_f):
+                    patched_frames[f]["state"][4] &= 0xFE
+                    patched_frames[f]["deltas"][4] = patched_frames[f]["state"][4]
+
+            # Voice 2
+            t2 = row.get("t2", {})
+            n2 = t2.get("note", "...")
+            if n2 and n2 != "..." and n2 != "===":
+                target_f2 = note_str_to_freq(n2)
+                orig_f2 = orig_state_at_start[7] | (orig_state_at_start[8] << 8)
+                if target_f2 > 0:
+                    ratio = (target_f2 / orig_f2) if orig_f2 > 0 else 1.0
+                    for f in range(start_f, end_f):
+                        curr_f = patched_frames[f]["state"][7] | (patched_frames[f]["state"][8] << 8)
+                        new_f = int(round(curr_f * ratio)) if orig_f2 > 0 else target_f2
+                        new_f = min(0xFFFF, max(0, new_f))
+                        patched_frames[f]["state"][7] = new_f & 0xFF
+                        patched_frames[f]["state"][8] = (new_f >> 8) & 0xFF
+                        patched_frames[f]["deltas"][7] = new_f & 0xFF
+                        patched_frames[f]["deltas"][8] = (new_f >> 8) & 0xFF
+            elif n2 == "===":
+                for f in range(start_f, end_f):
+                    patched_frames[f]["state"][11] &= 0xFE
+                    patched_frames[f]["deltas"][11] = patched_frames[f]["state"][11]
+
+            # Voice 3
+            t3 = row.get("t3", {})
+            n3 = t3.get("note", "...")
+            if n3 and n3 != "..." and n3 != "===":
+                target_f3 = note_str_to_freq(n3)
+                orig_f3 = orig_state_at_start[14] | (orig_state_at_start[15] << 8)
+                if target_f3 > 0:
+                    ratio = (target_f3 / orig_f3) if orig_f3 > 0 else 1.0
+                    for f in range(start_f, end_f):
+                        curr_f = patched_frames[f]["state"][14] | (patched_frames[f]["state"][15] << 8)
+                        new_f = int(round(curr_f * ratio)) if orig_f3 > 0 else target_f3
+                        new_f = min(0xFFFF, max(0, new_f))
+                        patched_frames[f]["state"][14] = new_f & 0xFF
+                        patched_frames[f]["state"][15] = (new_f >> 8) & 0xFF
+                        patched_frames[f]["deltas"][14] = new_f & 0xFF
+                        patched_frames[f]["deltas"][15] = (new_f >> 8) & 0xFF
+            elif n3 == "===":
+                for f in range(start_f, end_f):
+                    patched_frames[f]["state"][18] &= 0xFE
+                    patched_frames[f]["deltas"][18] = patched_frames[f]["state"][18]
+
+    return patched_frames

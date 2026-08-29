@@ -679,6 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-export-wav").addEventListener("click", async () => {
         try {
             const payload = {
+                sid_path: document.getElementById("sid-select").value,
                 active_pattern: trackerState.activePatternIdx,
                 speed: trackerState.speed,
                 instruments: trackerState.instruments,

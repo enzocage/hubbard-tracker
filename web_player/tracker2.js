@@ -690,10 +690,12 @@
             try {
                 document.getElementById("htf-sub-info").textContent = "SYNTHETISIERE EDITIERTES PATTERN MIT 100% 6581 SYNTHESIZER...";
                 const payload = {
+                    sid_path: document.getElementById("htf-sid-select").value,
                     active_pattern: htfState.activePatternIdx,
                     speed: htfState.speed,
                     instruments: htfState.instruments,
-                    patterns: htfState.patterns
+                    patterns: htfState.patterns,
+                    voice_mask: [!voiceMute[1], !voiceMute[2], !voiceMute[3]]
                 };
                 const res = await fetch("/api/render_tracker_pattern", {
                     method: "POST",

@@ -18,7 +18,7 @@ from engine.extractor import SIDExtractor
 from engine.synth import SIDSynthesizer
 from engine.remixer import HubbardRemixer
 from engine.ultra_remixer import HubbardUltraRemixer
-from engine.tracker_engine import HubbardTrackerDecompiler, note_str_to_freq, HUBBARD_DEFAULT_INSTRUMENTS
+from engine.tracker_engine import HubbardTrackerDecompiler, note_str_to_freq, HUBBARD_DEFAULT_INSTRUMENTS, patch_original_sid_stream
 from engine.transformer import StreamTransformer as SIDStreamTransformer
 from engine.stream_compiler import SIDStreamCompiler
 
@@ -546,76 +546,27 @@ class MasterStudioHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_api_render_tracker_pattern(self, payload):
         """
-        Synthesizes an edited tracker pattern row grid into cycle-accurate 50Hz PCM audio.
+        Renders edited tracker patterns into 44.1kHz audio by micro-patching
+        the user's edits directly into the 100% bit-exact original SID 50Hz stream.
+        This preserves all authentic master filters, PWM sweeps, ringmod, and sync!
         """
         patterns = payload.get("patterns", [])
-        active_pattern_idx = payload.get("active_pattern", 0)
-        instruments = {inst["id"]: inst for inst in payload.get("instruments", HUBBARD_DEFAULT_INSTRUMENTS)}
-        
-        if not patterns or active_pattern_idx >= len(patterns):
+        sid_path = payload.get("sid_path", "sid/Commando.sid")
+        frames_per_row = payload.get("speed", 6)
+        voice_mask = payload.get("voice_mask", (True, True, True))
+
+        if not os.path.exists(sid_path):
+            sid_path = "sid/Commando.sid"
+
+        if not patterns:
             self.send_error(400, "Invalid pattern data")
             return
 
-        rows = patterns[active_pattern_idx]
-        frames_per_row = payload.get("speed", 6)
+        # Micro-patch original 6502 register frame stream
+        patched_frames = patch_original_sid_stream(sid_path, patterns, speed=frames_per_row, num_frames=2400)
 
-        frame_stream = []
-        state = [0] * 25
-        state[24] = 0x0F # Full volume
-
-        for r_idx, row in enumerate(rows):
-            t1 = row.get("t1", {})
-            t2 = row.get("t2", {})
-            t3 = row.get("t3", {})
-
-            f1 = note_str_to_freq(t1.get("note", "..."))
-            f2 = note_str_to_freq(t2.get("note", "..."))
-            f3 = note_str_to_freq(t3.get("note", "..."))
-
-            inst1_id = int(t1.get("inst", 1) or 1)
-            inst2_id = int(t2.get("inst", 3) or 3)
-            inst3_id = int(t3.get("inst", 5) or 5)
-
-            i1 = instruments.get(inst1_id, HUBBARD_DEFAULT_INSTRUMENTS[0])
-            i2 = instruments.get(inst2_id, HUBBARD_DEFAULT_INSTRUMENTS[2])
-            i3 = instruments.get(inst3_id, HUBBARD_DEFAULT_INSTRUMENTS[4])
-
-            for f_sub in range(frames_per_row):
-                deltas = {}
-                if f_sub == 0:
-                    # Voice 1
-                    if f1 > 0:
-                        deltas[0] = f1 & 0xFF
-                        deltas[1] = (f1 >> 8) & 0xFF
-                        deltas[4] = i1.get("wave", 0x41)
-                        deltas[5] = (i1.get("attack", 0) << 4) | (i1.get("decay", 9) & 0x0F)
-                        deltas[6] = (i1.get("sustain", 0) << 4) | (i1.get("release", 0) & 0x0F)
-                    # Voice 2
-                    if f2 > 0:
-                        deltas[7] = f2 & 0xFF
-                        deltas[8] = (f2 >> 8) & 0xFF
-                        deltas[11] = i2.get("wave", 0x43)
-                        deltas[12] = (i2.get("attack", 0) << 4) | (i2.get("decay", 0) & 0x0F)
-                        deltas[13] = (i2.get("sustain", 15) << 4) | (i2.get("release", 0) & 0x0F)
-                    # Voice 3
-                    if f3 > 0:
-                        deltas[14] = f3 & 0xFF
-                        deltas[15] = (f3 >> 8) & 0xFF
-                        deltas[18] = i3.get("wave", 0x41)
-                        deltas[19] = (i3.get("attack", 0) << 4) | (i3.get("decay", 0) & 0x0F)
-                        deltas[20] = (i3.get("sustain", 9) << 4) | (i3.get("release", 0) & 0x0F)
-
-                # Update cumulative state
-                for k, v in deltas.items():
-                    state[k] = v
-
-                frame_stream.append({
-                    "frame": len(frame_stream),
-                    "deltas": deltas,
-                    "state": list(state)
-                })
-
-        pcm_data, _ = synth_engine.render_frame_stream(frame_stream, voice_mask=(True, True, True))
+        # Synthesize with 100% cycle-accurate MOS 6581 software engine
+        pcm_data, _ = synth_engine.render_frame_stream(patched_frames, voice_mask=tuple(voice_mask))
         wav_buf = io.BytesIO()
         synth_engine.save_wav(pcm_data, wav_buf)
         wav_bytes = wav_buf.getvalue()
