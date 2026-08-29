@@ -283,16 +283,24 @@
     // 100% AKUSTISCHER WYSIWYG-ENGINE (ORIGINAL-KLANGEREIGNISSE)
     // =========================================================================
     
-    // Audition the exact original sound event from the SID at this step & track
+    // Audition the exact original sound event from the SID at this step & track (100% ISOLATED STEM)
     function auditionCellOriginalSound(stepIdx, trackIdx) {
         initAudio();
         if (audioCtx.state === "suspended") audioCtx.resume();
-        if (!authenticAudioBuffer) return;
+
+        const voiceBuf = voiceAudioBuffers[trackIdx] || authenticAudioBuffer;
+        if (!voiceBuf) return;
 
         const pat = htfState.patterns[htfState.activePatternIdx];
         if (!pat || !pat[stepIdx]) return;
         const cell = pat[stepIdx][`t${trackIdx}`];
         if (!cell || cell.note === "..." || cell.note === "===") return;
+
+        // Auto-select this exact instrument so it becomes immediately active and playable on keyboard
+        const instId = parseInt(cell.inst) || (trackIdx === 1 ? 1 : (trackIdx === 2 ? 3 : 5));
+        if (instId > 0 && htfState.activeInstId !== instId) {
+            selectInstrument(instId);
+        }
 
         let durFrames = 6;
         if (cell.dur && cell.dur.startsWith("L")) {
@@ -303,14 +311,14 @@
 
         try {
             const src = audioCtx.createBufferSource();
-            src.buffer = authenticAudioBuffer;
+            src.buffer = voiceBuf;
             
             const gain = audioCtx.createGain();
             gain.gain.value = 1.0;
             src.connect(gain);
             gain.connect(voiceGainNodes[trackIdx] || masterGainNode);
 
-            // Flash VU meter
+            // Flash VU meter for this track
             const vuEl = document.getElementById(`vu-fill-${trackIdx}`);
             if (vuEl) {
                 vuEl.style.width = "100%";
@@ -323,13 +331,14 @@
         }
     }
 
-    // Play note on keyboard using pitch-shifted authentic audio slice of the original SID instrument
+    // Play note on keyboard using pitch-shifted authentic audio slice of the active instrument
     function playLiveSound(noteStr, inst) {
         initAudio();
         if (audioCtx.state === "suspended") audioCtx.resume();
 
         const targetMidi = noteToMidi(noteStr);
         const trackIdx = htfState.cursorTrack || 1;
+        const voiceBuf = voiceAudioBuffers[trackIdx] || voiceAudioBuffers[1] || authenticAudioBuffer;
 
         // Flash active VU Meter
         const vuEl = document.getElementById(`vu-fill-${trackIdx}`);
@@ -338,16 +347,15 @@
             setTimeout(() => { vuEl.style.width = "0%"; }, 150);
         }
 
-        // If authenticAudioBuffer is available, find a representative slice of this track's instrument and pitch-shift it
-        if (authenticAudioBuffer) {
-            // Find the first step in the pattern that has a note on this track to use as authentic reference slice
+        // If authentic voice buffer is available, find the authentic reference slice for this track/instrument and pitch-shift it
+        if (voiceBuf) {
             let refStep = 0;
             let refNote = "C-4";
             const pat = htfState.patterns[htfState.activePatternIdx];
             if (pat) {
                 for (let s = 0; s < pat.length; s++) {
                     const c = pat[s][`t${trackIdx}`];
-                    if (c && c.note !== "..." && c.note !== "===") {
+                    if (c && c.note && c.note !== "..." && c.note !== "===") {
                         refStep = s;
                         refNote = c.note;
                         break;
@@ -359,11 +367,11 @@
             const semitoneDelta = targetMidi - refMidi;
             const rate = Math.pow(2.0, semitoneDelta / 12.0);
             const refStartSec = (htfState.activePatternIdx * 64 + refStep) * htfState.speed * 0.02;
-            const sliceDurSec = 0.45;
+            const sliceDurSec = 0.55;
 
             try {
                 const src = audioCtx.createBufferSource();
-                src.buffer = authenticAudioBuffer;
+                src.buffer = voiceBuf;
                 src.playbackRate.value = Math.max(0.1, Math.min(8.0, rate));
 
                 const env = audioCtx.createGain();
@@ -381,13 +389,13 @@
             }
         }
 
-        // Fallback if buffer not loaded yet
+        // Fallback software synthesis if buffer not loaded yet
         const freq = noteToHz(noteStr);
         if (freq <= 0) return;
         const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const env = audioCtx.createGain();
-        osc.type = inst.wave === 0x21 ? "sawtooth" : (inst.wave === 0x11 ? "triangle" : "square");
+        osc.type = (inst && inst.wave === 0x21) ? "sawtooth" : ((inst && inst.wave === 0x11) ? "triangle" : "square");
         osc.frequency.setValueAtTime(freq, now);
         env.gain.setValueAtTime(0.5, now);
         env.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
