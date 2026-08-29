@@ -156,6 +156,8 @@
     let masterWaveShaperNode = null;
     let analyserNode = null;
     let voiceGainNodes = { 1: null, 2: null, 3: null };
+    let voiceAudioBuffers = { 1: null, 2: null, 3: null };
+    let activeVoiceSources = { 1: null, 2: null, 3: null };
     let currentAudioSource = null;
     let authenticAudioBuffer = null;
     let playbackStartTime = 0;
@@ -220,7 +222,7 @@
             } else if (voiceMute[v]) {
                 active = false;
             }
-            if (voiceGainNodes[v]) {
+            if (voiceGainNodes[v] && audioCtx) {
                 voiceGainNodes[v].gain.setTargetAtTime(active ? 1.0 : 0.0, audioCtx.currentTime, 0.01);
             }
             document.querySelectorAll(`.track-${v}`).forEach(cell => {
@@ -232,16 +234,27 @@
     async function loadAuthenticSIDAudio(sidPath) {
         initAudio();
         try {
-            document.getElementById("htf-sub-info").textContent = "RENDERE 100% BITGENAUES 6502 MOS 6581 AUDIO...";
-            const v1 = (!voiceSolo[2] && !voiceSolo[3] && !voiceMute[1]) ? 1 : (voiceSolo[1] ? 1 : 0);
-            const v2 = (!voiceSolo[1] && !voiceSolo[3] && !voiceMute[2]) ? 1 : (voiceSolo[2] ? 1 : 0);
-            const v3 = (!voiceSolo[1] && !voiceSolo[2] && !voiceMute[3]) ? 1 : (voiceSolo[3] ? 1 : 0);
+            document.getElementById("htf-sub-info").textContent = "LADE 3 ECHTE SPUREN (VOICE 1, 2, 3) FÜR ECHTZEIT-SOLO/MUTE...";
             
-            const res = await fetch(`/api/render?sid=${encodeURIComponent(sidPath)}&v1=${v1}&v2=${v2}&v3=${v3}&start=0&end=2400`);
-            if (!res.ok) throw new Error("Audio render failed");
-            const arrayBuf = await res.arrayBuffer();
-            authenticAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
-            document.getElementById("htf-sub-info").textContent = `${htfState.title.toUpperCase()} • ${htfState.author} • 100% MOS 6581 AUDIO GELADEN`;
+            const [r1, r2, r3] = await Promise.all([
+                fetch(`/api/render?sid=${encodeURIComponent(sidPath)}&v1=1&v2=0&v3=0&start=0&end=2400`),
+                fetch(`/api/render?sid=${encodeURIComponent(sidPath)}&v1=0&v2=1&v3=0&start=0&end=2400`),
+                fetch(`/api/render?sid=${encodeURIComponent(sidPath)}&v1=0&v2=0&v3=1&start=0&end=2400`)
+            ]);
+
+            const [ab1, ab2, ab3] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer(), r3.arrayBuffer()]);
+            const [b1, b2, b3] = await Promise.all([
+                audioCtx.decodeAudioData(ab1),
+                audioCtx.decodeAudioData(ab2),
+                audioCtx.decodeAudioData(ab3)
+            ]);
+
+            voiceAudioBuffers[1] = b1;
+            voiceAudioBuffers[2] = b2;
+            voiceAudioBuffers[3] = b3;
+            authenticAudioBuffer = b1;
+
+            document.getElementById("htf-sub-info").textContent = `${htfState.title.toUpperCase()} • ${htfState.author} • 3-SPUR MOS 6581 AUDIO BEREIT`;
         } catch (e) {
             console.error("Audio Load Error:", e);
         }
@@ -555,22 +568,44 @@
         backgroundUpdateTimer = setTimeout(async () => {
             if (!isPatternModified) return;
             try {
-                const payload = {
-                    sid_path: document.getElementById("htf-sid-select").value,
+                const sid = document.getElementById("htf-sid-select").value;
+                const basePayload = {
+                    sid_path: sid,
                     active_pattern: htfState.activePatternIdx,
                     speed: htfState.speed,
                     instruments: htfState.instruments,
-                    patterns: htfState.patterns,
-                    voice_mask: [!voiceMute[1], !voiceMute[2], !voiceMute[3]]
+                    patterns: htfState.patterns
                 };
-                const res = await fetch("/api/render_tracker_pattern", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    const ab = await res.arrayBuffer();
-                    authenticAudioBuffer = await audioCtx.decodeAudioData(ab);
+
+                const [r1, r2, r3] = await Promise.all([
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 1 })
+                    }),
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 2 })
+                    }),
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 3 })
+                    })
+                ]);
+
+                if (r1.ok && r2.ok && r3.ok) {
+                    const [ab1, ab2, ab3] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer(), r3.arrayBuffer()]);
+                    const [b1, b2, b3] = await Promise.all([
+                        audioCtx.decodeAudioData(ab1),
+                        audioCtx.decodeAudioData(ab2),
+                        audioCtx.decodeAudioData(ab3)
+                    ]);
+                    voiceAudioBuffers[1] = b1;
+                    voiceAudioBuffers[2] = b2;
+                    voiceAudioBuffers[3] = b3;
+                    authenticAudioBuffer = b1;
                     isPatternModified = false;
                 }
             } catch(e) {
@@ -795,22 +830,44 @@
         if (isPatternModified) {
             try {
                 document.getElementById("htf-sub-info").textContent = "SYNTHETISIERE EDITIERTES PATTERN MIT 100% 6581 SYNTHESIZER...";
-                const payload = {
-                    sid_path: document.getElementById("htf-sid-select").value,
+                const sid = document.getElementById("htf-sid-select").value;
+                const basePayload = {
+                    sid_path: sid,
                     active_pattern: htfState.activePatternIdx,
                     speed: htfState.speed,
                     instruments: htfState.instruments,
-                    patterns: htfState.patterns,
-                    voice_mask: [!voiceMute[1], !voiceMute[2], !voiceMute[3]]
+                    patterns: htfState.patterns
                 };
-                const res = await fetch("/api/render_tracker_pattern", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                if (res.ok) {
-                    const ab = await res.arrayBuffer();
-                    authenticAudioBuffer = await audioCtx.decodeAudioData(ab);
+
+                const [r1, r2, r3] = await Promise.all([
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 1 })
+                    }),
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 2 })
+                    }),
+                    fetch("/api/render_tracker_pattern", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ ...basePayload, voice: 3 })
+                    })
+                ]);
+
+                if (r1.ok && r2.ok && r3.ok) {
+                    const [ab1, ab2, ab3] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer(), r3.arrayBuffer()]);
+                    const [b1, b2, b3] = await Promise.all([
+                        audioCtx.decodeAudioData(ab1),
+                        audioCtx.decodeAudioData(ab2),
+                        audioCtx.decodeAudioData(ab3)
+                    ]);
+                    voiceAudioBuffers[1] = b1;
+                    voiceAudioBuffers[2] = b2;
+                    voiceAudioBuffers[3] = b3;
+                    authenticAudioBuffer = b1;
                     isPatternModified = false;
                 }
             } catch(e) {
@@ -818,7 +875,7 @@
             }
         }
 
-        if (!authenticAudioBuffer) {
+        if (!voiceAudioBuffers[1] || !voiceAudioBuffers[2] || !voiceAudioBuffers[3]) {
             await loadAuthenticSIDAudio(document.getElementById("htf-sid-select").value);
         }
 
@@ -827,35 +884,44 @@
         const offsetSec = isSongMode ? 0 : (htfState.activePatternIdx * patternDurationSec);
         const loopDuration = patternDurationSec;
 
-        currentAudioSource = audioCtx.createBufferSource();
-        currentAudioSource.buffer = authenticAudioBuffer;
-
-        if (!isSongMode) {
-            currentAudioSource.loop = true;
-            currentAudioSource.loopStart = offsetSec;
-            currentAudioSource.loopEnd = Math.min(authenticAudioBuffer.duration, offsetSec + loopDuration);
-        }
-
-        currentAudioSource.connect(masterGainNode);
-        
         // Apply current BPM and Clock speed
         const baseBpm = 125.0;
         const curBpm = parseInt(document.getElementById("inp-bpm").value) || 125;
         htfState.bpm = curBpm;
         const clockMult = (htfState.clock === "ntsc") ? (60.0 / 50.0) : 1.0;
         const speedRate = (curBpm / baseBpm) * clockMult;
-        currentAudioSource.playbackRate.value = Math.max(0.2, Math.min(4.0, speedRate));
+
+        // Launch 3 Synchronized Voice Audio Sources connected to individual voiceGainNodes
+        [1, 2, 3].forEach(v => {
+            const buf = voiceAudioBuffers[v] || authenticAudioBuffer;
+            if (!buf) return;
+
+            const src = audioCtx.createBufferSource();
+            src.buffer = buf;
+
+            if (!isSongMode) {
+                src.loop = true;
+                src.loopStart = offsetSec;
+                src.loopEnd = Math.min(buf.duration, offsetSec + loopDuration);
+            }
+
+            src.playbackRate.value = Math.max(0.2, Math.min(4.0, speedRate));
+            src.connect(voiceGainNodes[v]);
+            src.start(0, offsetSec);
+            activeVoiceSources[v] = src;
+        });
+
+        currentAudioSource = activeVoiceSources[1];
+        updateVoiceMuteSoloRouting();
 
         playbackStartTime = audioCtx.currentTime;
         playbackStartOffset = offsetSec;
-
-        currentAudioSource.start(0, offsetSec);
 
         // High Precision Real-Time Frame-Sync Loop
         function syncPlayhead() {
             if (!htfState.isPlaying) return;
 
-            const curRate = (currentAudioSource && currentAudioSource.playbackRate) ? currentAudioSource.playbackRate.value : 1.0;
+            const curRate = (activeVoiceSources[1] && activeVoiceSources[1].playbackRate) ? activeVoiceSources[1].playbackRate.value : 1.0;
             const elapsedSec = (audioCtx.currentTime - playbackStartTime) * curRate;
             let currentTotalSec = playbackStartOffset + elapsedSec;
 
@@ -889,18 +955,16 @@
 
     function stopHTFPlayback() {
         htfState.isPlaying = false;
-        if (animFrameId) {
-            cancelAnimationFrame(animFrameId);
-            animFrameId = null;
-        }
-        if (currentAudioSource) {
-            try {
-                currentAudioSource.stop();
-                currentAudioSource.disconnect();
-            } catch (e) {}
-            currentAudioSource = null;
-        }
-        highlightCursor();
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        [1, 2, 3].forEach(v => {
+            if (activeVoiceSources[v]) {
+                try { activeVoiceSources[v].stop(); } catch(e){}
+                activeVoiceSources[v].disconnect();
+                activeVoiceSources[v] = null;
+            }
+        });
+        currentAudioSource = null;
+        document.querySelectorAll(".htf-row").forEach(r => r.classList.remove("playhead"));
     }
 
     // =========================================================================

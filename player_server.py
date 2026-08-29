@@ -557,9 +557,18 @@ class MasterStudioHandler(http.server.SimpleHTTPRequestHandler):
         This preserves all authentic master filters, PWM sweeps, ringmod, and sync!
         """
         patterns = payload.get("patterns", [])
+        voice = payload.get("voice", 0)
+        if voice == 1:
+            voice_mask = (True, False, False)
+        elif voice == 2:
+            voice_mask = (False, True, False)
+        elif voice == 3:
+            voice_mask = (False, False, True)
+        else:
+            voice_mask = payload.get("voice_mask", (True, True, True))
+
         sid_path = payload.get("sid_path", "sid/Commando.sid")
         frames_per_row = payload.get("speed", 6)
-        voice_mask = payload.get("voice_mask", (True, True, True))
 
         if not os.path.exists(sid_path):
             sid_path = "sid/Commando.sid"
