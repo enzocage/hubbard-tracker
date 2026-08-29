@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rob Hubbard SID Music Tracker | 19 SIDs Decompiler & Chiptune Studio</title>
+    <link rel="stylesheet" href="tracker.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700;900&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="tracker-body">
+    <div class="tracker-container">
+
+        <!-- ================================================================= -->
+        <!-- 1. TOP HEADER & SID TRACK SELECTOR                                -->
+        <!-- ================================================================= -->
+        <header class="tracker-header">
+            <div class="header-branding">
+                <div class="tracker-logo">
+                    <span class="logo-chip">6581</span>
+                    <span class="logo-text">HUBBARD TRACKER</span>
+                </div>
+                <div class="header-track-info">
+                    <span class="song-title-display" id="disp-song-title">COMMANDO</span>
+                    <span class="song-author-display" id="disp-song-author">Rob Hubbard (1985) • 3 Voices PAL</span>
+                </div>
+            </div>
+
+            <!-- Quick SID Loader for all 19 SIDs -->
+            <div class="sid-select-bar">
+                <label for="sid-select" class="sid-label">SID LADEN:</label>
+                <select id="sid-select" class="custom-sid-select">
+                    <option value="sid/Commando.sid" selected>01. Commando (1985)</option>
+                    <option value="sid/Monty_on_the_Run.sid">02. Monty on the Run (1985)</option>
+                    <option value="sid/Delta.sid">03. Delta (1987)</option>
+                    <option value="sid/IK_plus.sid">04. International Karate + (1987)</option>
+                    <option value="sid/Crazy_Comets.sid">05. Crazy Comets (1985)</option>
+                    <option value="sid/Sanxion.sid">06. Sanxion (1986)</option>
+                    <option value="sid/Spellbound.sid">07. Spellbound (1985)</option>
+                    <option value="sid/Warhawk.sid">08. Warhawk (1986)</option>
+                    <option value="sid/Master_of_Magic.sid">09. Master of Magic (1985)</option>
+                    <option value="sid/Zoids.sid">10. Zoids (1985)</option>
+                    <option value="sid/Flash_Gordon.sid">11. Flash Gordon (1986)</option>
+                    <option value="sid/Lightforce.sid">12. Lightforce (1986)</option>
+                    <option value="sid/Nemesis_the_Warlock.sid">13. Nemesis the Warlock (1987)</option>
+                    <option value="sid/Last_V8.sid">14. The Last V8 (1985)</option>
+                    <option value="sid/I_Ball.sid">15. I-Ball (1987)</option>
+                    <option value="sid/Knucklebusters.sid">16. Knucklebusters (1986)</option>
+                    <option value="sid/Mega_Apocalypse.sid">17. Mega Apocalypse (1987)</option>
+                    <option value="sid/Kentilla.sid">18. Kentilla (1986)</option>
+                    <option value="sid/Chimera.sid">19. Chimera (1985)</option>
+                </select>
+                <button class="btn-head-action" id="btn-load-sid" title="Ausgewähltes SID decompilieren und in Tracker-Pattern laden">📥 DECOMPILIEREN</button>
+                <a href="tracker2.html" class="btn-head-action" style="background: linear-gradient(135deg, rgba(255, 145, 0, 0.2), rgba(255, 51, 102, 0.3)); border-color: #ff9100; text-decoration: none;" title="Zum neuen Frame-Quantisierten HTF Tracker 2">🚀 TRACKER 2 (HTF)</a>
+                <a href="index.html" class="btn-link-daw" title="Zurück zum Ableton Remix Studio">🎛️ ABLETON STUDIO</a>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- 2. TRACKER TRANSPORT & EDIT CONTROLS                              -->
+        <!-- ================================================================= -->
+        <section class="tracker-transport-bar">
+            <div class="transport-buttons">
+                <button class="t-btn btn-play-song" id="btn-play-song" title="Ganzen Song abspielen (Leertaste)">
+                    <span class="icon">▶</span> SONG
+                </button>
+                <button class="t-btn btn-play-pat" id="btn-play-pat" title="Aktuelles Pattern loopen">
+                    <span class="icon">🔁</span> PATTERN
+                </button>
+                <button class="t-btn btn-stop" id="btn-stop" title="Stoppen (Esc / Leertaste)">
+                    <span class="icon">⏹</span> STOP
+                </button>
+                <button class="t-btn btn-record" id="btn-record-mode" title="Noten-Eingabe & Edit-Modus aktivieren">
+                    <span class="rec-dot"></span> EDIT MODE
+                </button>
+            </div>
+
+            <!-- Parameters: BPM, Speed, Octave, Step -->
+            <div class="transport-params">
+                <div class="param-unit">
+                    <label>BPM</label>
+                    <input type="number" id="inp-bpm" min="40" max="240" value="125">
+                </div>
+                <div class="param-unit">
+                    <label>SPEED</label>
+                    <input type="number" id="inp-speed" min="1" max="16" value="6" title="Frames pro Tracker-Zeile">
+                </div>
+                <div class="param-unit">
+                    <label>OKTAVE</label>
+                    <input type="number" id="inp-octave" min="1" max="7" value="4">
+                </div>
+                <div class="param-unit">
+                    <label>STEP</label>
+                    <input type="number" id="inp-step" min="0" max="16" value="1" title="Cursor-Vorschub nach Noteneingabe">
+                </div>
+                <div class="param-unit pat-unit">
+                    <label>PATTERN</label>
+                    <select id="sel-pattern">
+                        <option value="0" selected>00: Intro</option>
+                        <option value="1">01: Thema A</option>
+                        <option value="2">02: Thema B</option>
+                        <option value="3">03: Climax</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Edit & Export Actions -->
+            <div class="transport-actions">
+                <button class="btn-action-sm" id="btn-trans-up" title="Ausgewählte Noten +1 Halbton höher">⬆ +1 HT</button>
+                <button class="btn-action-sm" id="btn-trans-down" title="Ausgewählte Noten -1 Halbton tiefer">⬇ -1 HT</button>
+                <button class="btn-action-sm" id="btn-clear-pat" title="Pattern leeren">🗑️ LEEREN</button>
+                <button class="btn-action-export sid" id="btn-export-sid" title="Als spielbare C64 .SID Datei exportieren">💾 EXPORT .SID</button>
+                <button class="btn-action-export wav" id="btn-export-wav" title="Als 44.1kHz WAV Audio rendern">🔊 EXPORT .WAV</button>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 3. UPPER WORKSPACE: INSTRUMENT RACK & LIVE PIANO KEYBOARD         -->
+        <!-- ================================================================= -->
+        <section class="tracker-upper-bay">
+
+            <!-- 3.1 INSTRUMENT SELECTOR LIST -->
+            <div class="inst-list-panel">
+                <div class="panel-tag-header">
+                    <span>🎹 INSTRUMENTE (10 HUBBARD KLÄNGE)</span>
+                    <button class="btn-mini-add" id="btn-add-inst" title="Neues Instrument anlegen">+</button>
+                </div>
+                <div class="inst-scroll-list" id="inst-list-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- 3.2 INSTRUMENT PARAMETER EDITOR -->
+            <div class="inst-editor-panel">
+                <div class="panel-tag-header">
+                    <span id="inst-editor-title">KLANGFARBEN-EDITOR: #01 Heroic Pulse Lead</span>
+                    <span class="chip-reg" id="inst-reg-preview">$D400-$D406</span>
+                </div>
+
+                <div class="inst-controls-grid">
+                    <!-- Waveform Selector -->
+                    <div class="inst-control-group">
+                        <label class="ctrl-label">WELLENFORM:</label>
+                        <div class="wave-btn-group">
+                            <button class="btn-wave active" data-wave="0x41" title="Pulse / Rechteck ($41)">⎍ PULSE</button>
+                            <button class="btn-wave" data-wave="0x21" title="Sawtooth / Sägezahn ($21)">▲ SAW</button>
+                            <button class="btn-wave" data-wave="0x11" title="Triangle / Dreieck ($11)">~ TRI</button>
+                            <button class="btn-wave" data-wave="0x81" title="Noise / Rauschen ($81)">▒ NOISE</button>
+                            <button class="btn-wave" data-wave="0x15" title="Tri + RingMod ($15)">▲+🔔 RING</button>
+                            <button class="btn-wave" data-wave="0x43" title="Pulse + HardSync ($43)">⎍+⚙ SYNC</button>
+                        </div>
+                    </div>
+
+                    <!-- Pulse Width -->
+                    <div class="inst-control-group">
+                        <div class="lbl-row">
+                            <label class="ctrl-label">PULS-BREITE (PW):</label>
+                            <span class="val-mono" id="lbl-inst-pw">2048 (50%)</span>
+                        </div>
+                        <input type="range" id="inst-pw" min="0" max="4095" value="2048">
+                    </div>
+
+                    <!-- ADSR Envelope -->
+                    <div class="inst-control-group">
+                        <label class="ctrl-label">ADSR HÜLLKURVE:</label>
+                        <div class="adsr-sliders">
+                            <div class="adsr-unit">
+                                <label>A</label>
+                                <input type="range" id="inst-att" min="0" max="15" value="0">
+                                <span id="lbl-inst-att">0</span>
+                            </div>
+                            <div class="adsr-unit">
+                                <label>D</label>
+                                <input type="range" id="inst-dec" min="0" max="15" value="9">
+                                <span id="lbl-inst-dec">9</span>
+                            </div>
+                            <div class="adsr-unit">
+                                <label>S</label>
+                                <input type="range" id="inst-sus" min="0" max="15" value="0">
+                                <span id="lbl-inst-sus">0</span>
+                            </div>
+                            <div class="adsr-unit">
+                                <label>R</label>
+                                <input type="range" id="inst-rel" min="0" max="15" value="0">
+                                <span id="lbl-inst-rel">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Micro Pitch & Filter Routing -->
+                    <div class="inst-control-group">
+                        <label class="ctrl-label">ROUTING & EFFEKT:</label>
+                        <div class="misc-controls-row">
+                            <label class="chk-label">
+                                <input type="checkbox" id="inst-flt-route" checked>
+                                <span>6581 Filter Bus</span>
+                            </label>
+                            <select id="inst-fx-select" class="custom-select-xs">
+                                <option value="none">Kein Pitch FX</option>
+                                <option value="scoop" selected>Pitch-Scoop (-2 HT)</option>
+                                <option value="vibrato">Delayed Vibrato (5.5Hz)</option>
+                                <option value="trill">Vorhalts-Triller (+2 HT)</option>
+                                <option value="slap">Slap-Pop (+12 HT)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3.3 LIVE VIRTUAL PIANO KEYBOARD -->
+            <div class="inst-piano-panel">
+                <div class="panel-tag-header">
+                    <span>🎹 LIVE-KEYBOARD (TASTATUR-STEUERUNG AKTIV)</span>
+                    <span class="key-hint">Tasten: A, W, S, E, D, F, T, G, Y, H, U, J, K</span>
+                </div>
+                <div class="virtual-piano-keys" id="piano-keyboard">
+                    <!-- Octave 3 & 4 Virtual Keys rendered by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 4. MAIN PATTERN EDITOR: 3-TRACK 64-ROW TRACKER GRID              -->
+        <!-- ================================================================= -->
+        <section class="tracker-grid-wrapper">
+            <!-- Grid Header Labels -->
+            <div class="pattern-header-row">
+                <div class="col-row-num">ROW</div>
+                <div class="col-track track-1">
+                    <span class="t-name">TRACK 1: LEAD SOLO</span>
+                    <span class="t-sub">$D400-$D406 (Cyan)</span>
+                </div>
+                <div class="col-track track-2">
+                    <span class="t-name">TRACK 2: ARPEGGIO CHORDS</span>
+                    <span class="t-sub">$D407-$D40D (Gelb)</span>
+                </div>
+                <div class="col-track track-3">
+                    <span class="t-name">TRACK 3: BASS & DRUMS</span>
+                    <span class="t-sub">$D40E-$D414 (Grün)</span>
+                </div>
+            </div>
+
+            <!-- Scrollable 64-Row Table Grid -->
+            <div class="pattern-grid-scroll" id="pattern-grid-scroll">
+                <div class="pattern-grid-table" id="pattern-grid-table">
+                    <!-- Populated dynamically: 64 rows with interactive cells -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 5. BOTTOM STATUS & MASTER 6581 FILTER BAR                         -->
+        <!-- ================================================================= -->
+        <footer class="tracker-footer-bar">
+            <!-- Mini Scope -->
+            <div class="footer-scope-bay">
+                <canvas id="tracker-scope-canvas" width="220" height="38"></canvas>
+            </div>
+
+            <!-- Master 6581 Filter Controls -->
+            <div class="footer-filter-bay">
+                <span class="flt-tag">6581 MASTER FILTER:</span>
+                <select id="trk-flt-mode" class="custom-select-xs">
+                    <option value="0x2F" selected>12dB Bandpass ($2F)</option>
+                    <option value="0x1F">12dB Lowpass ($1F)</option>
+                    <option value="0x4F">12dB Highpass ($4F)</option>
+                    <option value="0x0F">Bypass / Dry</option>
+                </select>
+                <div class="flt-slider-wrap">
+                    <label>CUTOFF:</label>
+                    <input type="range" id="trk-flt-cutoff" min="0" max="2047" value="1024">
+                </div>
+                <div class="flt-slider-wrap">
+                    <label>RES (Q):</label>
+                    <input type="range" id="trk-flt-res" min="0" max="15" value="14">
+                </div>
+            </div>
+
+            <!-- Telemetry Status Line -->
+            <div class="footer-status-line">
+                <span class="stat-item" id="stat-row">ROW: 00 / 63</span>
+                <span class="stat-item" id="stat-clock">50.0 Hz PAL</span>
+                <span class="stat-item highlight" id="stat-edit-mode">MODE: EDIT READY</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Tracker Engine Script -->
+    <script src="tracker.js"></script>
+</body>
+</html>

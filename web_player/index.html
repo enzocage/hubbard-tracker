@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rob Hubbard Master Remix Studio & C64 Audio Workstation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- ================================================================= -->
+        <!-- TOP HEADER & GLOBAL NAV                                           -->
+        <!-- ================================================================= -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="c64-badge">MOS 6581</div>
+                <h1>ROB HUBBARD <span>MASTER REMIX STUDIO</span></h1>
+            </div>
+            
+            <nav class="studio-nav">
+                <button class="nav-tab active" data-target="view-player">
+                    <span class="tab-icon">🎛️</span>
+                    <span class="tab-label">1. PLAYER & INSPECTOR</span>
+                </button>
+                <button class="nav-tab" data-target="view-remix">
+                    <span class="tab-icon">🧬</span>
+                    <span class="tab-label">2. ABLETON REMIX-LABOR</span>
+                </button>
+                <button class="nav-tab" data-target="view-flowchart">
+                    <span class="tab-icon">🗺️</span>
+                    <span class="tab-label">3. MODULARE STRUKTUR & FLOWCHART</span>
+                </button>
+                <button class="nav-tab" data-target="view-hybrid">
+                    <span class="tab-icon">🔀</span>
+                    <span class="tab-label">4. HYBRID-SPLEISSUNG</span>
+                </button>
+                <button class="nav-tab" data-target="view-telemetry">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">5. 50-KRITERIEN & 6502</span>
+                </button>
+                <a href="tracker.html" class="nav-tab nav-tab-tracker" style="text-decoration: none; color: inherit;" target="_blank">
+                    <span class="tab-icon">💾</span>
+                    <span class="tab-label">6. TRACKER 1</span>
+                </a>
+                <a href="tracker2.html" class="nav-tab nav-tab-tracker" style="text-decoration: none; color: #ff9100; border-color: rgba(255, 145, 0, 0.4);" target="_blank">
+                    <span class="tab-icon">🚀</span>
+                    <span class="tab-label">7. HTF TRACKER 2</span>
+                </a>
+            </nav>
+
+            <div class="header-status">
+                <span class="status-indicator live"></span>
+                <span class="status-text">PAL 50.0 Hz CYCLE-ACCURATE ENGINE</span>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 1: SID PLAYER & MULTITRACK INSPECTOR                         -->
+        <!-- ================================================================= -->
+        <main class="studio-grid studio-view active-view" id="view-player">
+            <!-- Sidebar: Track Selection -->
+            <section class="panel track-selector-panel">
+                <div class="panel-header">
+                    <h2>📁 TRACK BIBLIOTHEK</h2>
+                    <span class="badge" id="track-count">0 SIDs</span>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="track-search" placeholder="Suche Track (z.B. Commando, Monty, Delta)...">
+                </div>
+                <div class="track-categories">
+                    <button class="cat-btn active" data-cat="all">Alle</button>
+                    <button class="cat-btn" data-cat="original">Originale (19)</button>
+                    <button class="cat-btn" data-cat="remix">Subtle Remixes</button>
+                    <button class="cat-btn" data-cat="authentic">1:1 Authentic</button>
+                    <button class="cat-btn" data-cat="masterpiece">Custom AI</button>
+                </div>
+                <div class="track-list" id="track-list">
+                    <!-- Dynamic Tracks -->
+                </div>
+            </section>
+
+            <!-- Center Content -->
+            <section class="center-content">
+                <!-- Active Track Banner -->
+                <div class="now-playing-card">
+                    <div class="track-info">
+                        <span class="track-category-tag" id="np-category">AUTHENTIC 1:1</span>
+                        <h2 id="np-title">Wähle einen SID Track aus</h2>
+                        <p id="np-meta">Komponist: Rob Hubbard | PAL 50.0 Hz | Ladeadresse: $5000</p>
+                    </div>
+                    <div class="track-chips">
+                        <div class="chip" id="chip-voices">3 STIMMEN</div>
+                        <div class="chip" id="chip-filter">BANDPASS RES</div>
+                        <div class="chip highlight" id="chip-time">00:00 / 00:00</div>
+                    </div>
+                </div>
+
+                <!-- 3-Channel 60FPS Live Oscilloscope -->
+                <div class="visualizer-container">
+                    <div class="vis-header">
+                        <span>LIVE 3-KANAL OSZILLOSKOP & SPEKTRUM</span>
+                        <div class="vis-legend">
+                            <span class="leg-v1"><i class="dot v1"></i> Stimme 1 (Lead)</span>
+                            <span class="leg-v2"><i class="dot v2"></i> Stimme 2 (Arp)</span>
+                            <span class="leg-v3"><i class="dot v3"></i> Stimme 3 (Bass/Drums)</span>
+                        </div>
+                    </div>
+                    <canvas id="oscilloscope-canvas" width="800" height="150"></canvas>
+                </div>
+
+                <!-- Sub-Pattern Slicer & Range Scrubber -->
+                <div class="panel pattern-slicer-panel">
+                    <div class="panel-header">
+                        <h2>✂️ TEILPATTERN & AUSSCHNITT-WAHL</h2>
+                        <div class="quick-presets">
+                            <button class="preset-btn" data-start="0" data-end="100">Intro (0-4s)</button>
+                            <button class="preset-btn" data-start="100" data-end="300">Thema A (4-10s)</button>
+                            <button class="preset-btn" data-start="300" data-end="600">Bridge & Solo</button>
+                            <button class="preset-btn active" data-start="0" data-end="600">Gesamtes Stück</button>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-wrapper">
+                        <div class="timeline-labels">
+                            <span id="label-start">Start: 0.0s (Frame 0)</span>
+                            <span id="label-loop-status">Modus: Einmalig</span>
+                            <span id="label-end">Ende: 12.0s (Frame 600)</span>
+                        </div>
+                        <div class="range-slider-container">
+                            <input type="range" id="slider-start" min="0" max="600" value="0" step="10">
+                            <input type="range" id="slider-end" min="0" max="600" value="600" step="10">
+                            <div class="range-highlight" id="range-highlight"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3-Voice Mixer Panel -->
+                <div class="panel voice-mixer-panel">
+                    <div class="panel-header">
+                        <h2>🎛️ 3-STIMMEN ISOLATION & MIXER</h2>
+                        <span class="panel-tip">Klicken Sie auf 'S' (Solo) oder 'M' (Mute), um einzelne Spuren isoliert abzuhören</span>
+                    </div>
+
+                    <div class="voices-grid">
+                        <!-- Voice 1 -->
+                        <div class="voice-card" id="card-v1">
+                            <div class="voice-top">
+                                <span class="voice-num">V1</span>
+                                <div class="voice-title-box">
+                                    <h3>STIMME 1: LEAD & SOLI</h3>
+                                    <span class="wave-tag">SÄGEZAHN / PITCH-SCOOP</span>
+                                </div>
+                            </div>
+                            <div class="voice-controls">
+                                <button class="btn-solo" id="btn-solo-1">S (Solo)</button>
+                                <button class="btn-mute" id="btn-mute-1">M (Mute)</button>
+                            </div>
+                        </div>
+
+                        <!-- Voice 2 -->
+                        <div class="voice-card" id="card-v2">
+                            <div class="voice-top">
+                                <span class="voice-num">V2</span>
+                                <div class="voice-title-box">
+                                    <h3>STIMME 2: 50Hz ARPEGGIO</h3>
+                                    <span class="wave-tag">PULS 50% / PWM</span>
+                                </div>
+                            </div>
+                            <div class="voice-controls">
+                                <button class="btn-solo" id="btn-solo-2">S (Solo)</button>
+                                <button class="btn-mute" id="btn-mute-2">M (Mute)</button>
+                            </div>
+                        </div>
+
+                        <!-- Voice 3 -->
+                        <div class="voice-card" id="card-v3">
+                            <div class="voice-top">
+                                <span class="voice-num">V3</span>
+                                <div class="voice-title-box">
+                                    <h3>STIMME 3: BASS & DRUMS</h3>
+                                    <span class="wave-tag">SLAP-BASS + NOISE DRUMS</span>
+                                </div>
+                            </div>
+                            <div class="voice-controls">
+                                <button class="btn-solo" id="btn-solo-3">S (Solo)</button>
+                                <button class="btn-mute" id="btn-mute-3">M (Mute)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 2: ABLETON LIVE MULTI-TRACK SEQUENCER & DEVICE RACK          -->
+        <!-- ================================================================= -->
+        <main class="remix-workspace studio-view" id="view-remix" style="display: none;">
+            <!-- Ableton DAW Master Bar -->
+            <div class="ableton-master-bar">
+                <div class="daw-transport-left">
+                    <div class="daw-display-bpm">
+                        <span class="bpm-val">125.00</span>
+                        <span class="bpm-unit">BPM (50Hz)</span>
+                    </div>
+                    <div class="daw-display-time">
+                        <span class="time-sig">4 / 4</span>
+                        <span class="quant-val">1 / 16 QUANT</span>
+                    </div>
+                    <div class="audition-led-wrap" id="audition-indicator" title="Solo-Audition Status">
+                        <span class="led-dot"></span>
+                        <span class="led-text">AUDITION BEREIT</span>
+                    </div>
+                </div>
+
+                <div class="daw-main-title">
+                    <h2>🎛️ ABLETON LIVE SID-SEQUENCER & CHANNEL STRIP RACK</h2>
+                    <span class="daw-subtitle">Rob Hubbard MOS 6581 Granulare Rekompositions-Workstation</span>
+                </div>
+
+                <div class="daw-master-actions">
+                    <button class="btn-daw-play" id="btn-render-ultra">
+                        <span class="icon">▶</span> MASTER LAUNCH
+                    </button>
+                    <button class="btn-daw-secondary" id="btn-export-ultra-sid">
+                        💾 .SID EXPORT
+                    </button>
+                    <button class="btn-daw-secondary" id="btn-random-remix">
+                        🎲 ZUFALLS-REMIX
+                    </button>
+                </div>
+            </div>
+
+            <!-- ABLETON SESSION SCENE / CLIP MATRIX (MODULAR SEQUENCER) -->
+            <div class="panel ableton-session-panel">
+                <div class="panel-header">
+                    <div class="title-wrap">
+                        <span class="daw-badge">SESSION VIEW</span>
+                        <h2>🎼 SCENE- & CLIP-LAUNCHER (MODULARE ABLAUF-MATRIX)</h2>
+                    </div>
+                    <div class="seq-actions">
+                        <button class="btn-sm" id="btn-add-slot">+ Neuer Clip</button>
+                        <button class="btn-sm" id="btn-reset-slots">Standard-Szenen</button>
+                    </div>
+                </div>
+                <p class="panel-desc">Klicken Sie auf den <strong style="color:var(--neon-cyan)">[ ▶ ] Mini-Play-Button</strong> eines Clips, um diesen isoliert vorzuhören. Passen Sie Transposition, Loops und Fills pro Clip an.</p>
+                
+                <div class="slots-timeline" id="slots-timeline">
+                    <!-- Dynamic Scene / Clip cards generated by app.js with individual Mini Play Buttons -->
+                </div>
+            </div>
+
+            <!-- ABLETON 5-TRACK CHANNEL STRIP & DEVICE RACK -->
+            <div class="ableton-channels-grid">
+                <!-- ========================================================= -->
+                <!-- TRACK 1: LEAD SOLO (Cyan Track)                           -->
+                <!-- ========================================================= -->
+                <div class="ableton-track-strip track-v1" id="track-strip-v1">
+                    <div class="track-strip-header">
+                        <div class="track-header-top">
+                            <span class="track-num">1</span>
+                            <span class="track-title">LEAD SOLO</span>
+                            <label class="toggle-switch-sm">
+                                <input type="checkbox" id="u-v1-active" checked>
+                                <span class="slider-sm round"></span>
+                            </label>
+                        </div>
+                        <div class="track-action-bar">
+                            <button class="btn-mini-audition" data-solo="v1" title="Stimme 1 isoliert vorhören">
+                                <span class="mini-play-icon">▶</span> VORHÖREN
+                            </button>
+                            <div class="track-sm-btns">
+                                <button class="btn-daw-solo" id="daw-solo-v1">S</button>
+                                <button class="btn-daw-mute" id="daw-mute-v1">M</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device Rack 1: Tuning & Scales -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">TUNING & MIKRO-DETUNE</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Transpose: <span class="val-badge" id="lbl-u-trans">0 HT</span></label>
+                            <input type="range" id="u-v1-transpose" min="-24" max="24" value="0" step="1">
+                        </div>
+                        <div class="param-row">
+                            <label>Fine Detune: <span class="val-badge" id="lbl-u-cents">0 ct</span></label>
+                            <input type="range" id="u-v1-cents" min="-50" max="50" value="0" step="1">
+                        </div>
+                    </div>
+
+                    <!-- Device Rack 2: Ornaments & Trills -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">VERZIERUNG & TRILLER</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Vorhalts-Triller: <span class="val-badge" id="lbl-u-ornament">25%</span></label>
+                            <input type="range" id="u-v1-ornament" min="0" max="100" value="25">
+                        </div>
+                        <div class="param-row">
+                            <label>Passing Tones: <span class="val-badge" id="lbl-u-passing">15%</span></label>
+                            <input type="range" id="u-v1-passing" min="0" max="100" value="15">
+                        </div>
+                    </div>
+
+                    <!-- Device Rack 3: Pitch-Scoop -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">PITCH-SCOOP BEND</span>
+                        </div>
+                        <div class="param-grid-2">
+                            <div class="param-row">
+                                <label>Offset:</label>
+                                <select id="u-v1-scoop-offset" class="custom-select-sm">
+                                    <option value="0">0 (Aus)</option>
+                                    <option value="1">+1 HT</option>
+                                    <option value="2" selected>+2 HT</option>
+                                    <option value="4">+4 HT</option>
+                                    <option value="12">+12 HT</option>
+                                </select>
+                            </div>
+                            <div class="param-row">
+                                <label>Dauer:</label>
+                                <select id="u-v1-scoop-frames" class="custom-select-sm">
+                                    <option value="2">2f</option>
+                                    <option value="4" selected>4f</option>
+                                    <option value="8">8f</option>
+                                    <option value="16">16f</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="param-row">
+                            <label>Kurve:</label>
+                            <select id="u-v1-scoop-curve" class="custom-select-sm">
+                                <option value="exp" selected>Exponentiell (Hubbard)</option>
+                                <option value="linear">Linear</option>
+                                <option value="log">Logarithmisch</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Device Rack 4: Vibrato LFO -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">DELAYED VIBRATO LFO</span>
+                        </div>
+                        <div class="param-grid-2">
+                            <div class="param-row">
+                                <label>Delay: <span class="val-badge" id="lbl-u-vib-delay">8f</span></label>
+                                <input type="range" id="u-v1-vib-delay" min="0" max="32" value="8">
+                            </div>
+                            <div class="param-row">
+                                <label>Rate: <span class="val-badge" id="lbl-u-vib-rate">5.5Hz</span></label>
+                                <input type="range" id="u-v1-vib-rate" min="10" max="120" value="55">
+                            </div>
+                        </div>
+                        <div class="param-row">
+                            <label>Tiefe: <span class="val-badge" id="lbl-u-vib-depth">25 ct</span></label>
+                            <input type="range" id="u-v1-vib-depth" min="0" max="100" value="25">
+                        </div>
+                    </div>
+
+                    <!-- Device Rack 5: Attack Bursts & Waves -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">RINGMOD ATTACK & TIMBRE</span>
+                        </div>
+                        <div class="param-row">
+                            <label>RingMod Burst: <span class="val-badge" id="lbl-u-ringburst">2f</span></label>
+                            <input type="range" id="u-v1-ringburst" min="0" max="8" value="2">
+                        </div>
+                        <div class="param-row">
+                            <label>Waveform:</label>
+                            <select id="u-v1-wave-override" class="custom-select-sm">
+                                <option value="original" selected>Original</option>
+                                <option value="saw">Sägezahn $21</option>
+                                <option value="pulse">Puls $41</option>
+                                <option value="triangle">Dreieck $11</option>
+                                <option value="ringmod">RingMod $15</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- TRACK 2: ARPEGGIO CHORD (Yellow Track)                    -->
+                <!-- ========================================================= -->
+                <div class="ableton-track-strip track-v2" id="track-strip-v2">
+                    <div class="track-strip-header">
+                        <div class="track-header-top">
+                            <span class="track-num">2</span>
+                            <span class="track-title">ARPEGGIO</span>
+                            <label class="toggle-switch-sm">
+                                <input type="checkbox" id="u-v2-active" checked>
+                                <span class="slider-sm round"></span>
+                            </label>
+                        </div>
+                        <div class="track-action-bar">
+                            <button class="btn-mini-audition" data-solo="v2" title="Stimme 2 isoliert vorhören">
+                                <span class="mini-play-icon">▶</span> VORHÖREN
+                            </button>
+                            <div class="track-sm-btns">
+                                <button class="btn-daw-solo" id="daw-solo-v2">S</button>
+                                <button class="btn-daw-mute" id="daw-mute-v2">M</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device 1: Arp Harmonizer -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">ARP HARMONIZER (14 MODI)</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Akkord-Modus:</label>
+                            <select id="u-v2-arp-mode" class="custom-select-sm">
+                                <option value="original" selected>Originalgetreues Arp</option>
+                                <option value="m7">m7 (4-Schritt Moll-Septime)</option>
+                                <option value="M7">M7 (4-Schritt Dur-Septime)</option>
+                                <option value="m9">m9 (5-Schritt Jazz-Non)</option>
+                                <option value="m11">m11 (Lightforce 6-Schritt)</option>
+                                <option value="sus4">sus4 (Sphärische Quarte)</option>
+                                <option value="octave">Oktav-Bounce</option>
+                            </select>
+                        </div>
+                        <div class="param-grid-2">
+                            <div class="param-row">
+                                <label>Sub-Tick Rate:</label>
+                                <select id="u-v2-subtick" class="custom-select-sm">
+                                    <option value="50Hz" selected>50 Hz (1f/Note)</option>
+                                    <option value="100Hz">100 Hz (2x Turbo)</option>
+                                    <option value="25Hz">25 Hz (Halbzeit)</option>
+                                </select>
+                            </div>
+                            <div class="param-row">
+                                <label>Umkehrung:</label>
+                                <select id="u-v2-inversion" class="custom-select-sm">
+                                    <option value="0" selected>Grundstellung</option>
+                                    <option value="1">1. Umkehrung</option>
+                                    <option value="2">2. Umkehrung</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device 2: PWM LFO Engine -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">ANALOG PWM LFO</span>
+                        </div>
+                        <div class="param-row">
+                            <label>PWM Center: <span class="val-badge" id="lbl-u-pwm-center">2048</span></label>
+                            <input type="range" id="u-v2-pwm-center" min="500" max="3500" value="2048">
+                        </div>
+                        <div class="param-row">
+                            <label>Sweep Tiefe: <span class="val-badge" id="lbl-u-pwm-depth">1024</span></label>
+                            <input type="range" id="u-v2-pwm-depth" min="0" max="1800" value="1024">
+                        </div>
+                        <div class="param-row">
+                            <label>LFO Speed: <span class="val-badge" id="lbl-u-pwm-speed">1.25 Hz</span></label>
+                            <input type="range" id="u-v2-pwm-speed" min="1" max="100" value="12">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- TRACK 3: BASSLINE & SLAP (Green Track)                    -->
+                <!-- ========================================================= -->
+                <div class="ableton-track-strip track-v3" id="track-strip-v3">
+                    <div class="track-strip-header">
+                        <div class="track-header-top">
+                            <span class="track-num">3</span>
+                            <span class="track-title">SLAP BASS</span>
+                            <label class="toggle-switch-sm">
+                                <input type="checkbox" id="u-v3-active" checked>
+                                <span class="slider-sm round"></span>
+                            </label>
+                        </div>
+                        <div class="track-action-bar">
+                            <button class="btn-mini-audition" data-solo="v3_bass" title="Bassline isoliert vorhören">
+                                <span class="mini-play-icon">▶</span> VORHÖREN
+                            </button>
+                            <div class="track-sm-btns">
+                                <button class="btn-daw-solo" id="daw-solo-v3">S</button>
+                                <button class="btn-daw-mute" id="daw-mute-v3">M</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Device 1: Bass Pattern Generator -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">BASS GROOVE PATTERN</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Pattern-Stil:</label>
+                            <select id="u-v3-bass-pattern" class="custom-select-sm">
+                                <option value="original" selected>Originalgetreu</option>
+                                <option value="Commando_Gallop">Commando 16tel-Galopp</option>
+                                <option value="IK_SlapFunk">IK+ Slap-Funk</option>
+                                <option value="Delta_Rolling">Delta Rolling Space</option>
+                                <option value="LastV8_Rock">Last V8 Rock</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Device 2: Slap-Bass Pop Generator -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">SLAP-BASS OKTAV-POPS</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Pop-Dichte: <span class="val-badge" id="lbl-u-slap-pop">50%</span></label>
+                            <input type="range" id="u-v3-slap-pop" min="0" max="100" value="50">
+                        </div>
+                        <div class="param-row">
+                            <label>Pop-Oktave:</label>
+                            <select id="u-v3-slap-octave" class="custom-select-sm">
+                                <option value="12" selected>+1 Oktave (+12 HT)</option>
+                                <option value="24">+2 Oktaven (+24 HT)</option>
+                                <option value="7">+Quinte (+7 HT)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- TRACK 4: NOISE DRUMS (Orange Track)                       -->
+                <!-- ========================================================= -->
+                <div class="ableton-track-strip track-drums" id="track-strip-drums">
+                    <div class="track-strip-header">
+                        <div class="track-header-top">
+                            <span class="track-num">4</span>
+                            <span class="track-title">NOISE DRUMS</span>
+                            <span class="track-tag">V3 MUX</span>
+                        </div>
+                        <div class="track-action-bar">
+                            <button class="btn-mini-audition" data-solo="drums" title="Drums & Perkussion isoliert vorhören">
+                                <span class="mini-play-icon">▶</span> VORHÖREN
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Device 1: 16-Step Drum Matrix -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">16-STEP DRUM SEQUENCER</span>
+                        </div>
+                        <div class="drum-grid-16-wrap">
+                            <div class="drum-row">
+                                <span class="d-label">BD</span>
+                                <div class="step-btn-group" id="steps-kick"></div>
+                            </div>
+                            <div class="drum-row">
+                                <span class="d-label">SD</span>
+                                <div class="step-btn-group" id="steps-snare"></div>
+                            </div>
+                            <div class="drum-row">
+                                <span class="d-label">HH</span>
+                                <div class="step-btn-group" id="steps-hihat"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========================================================= -->
+                <!-- MASTER BUS: MOS 6581 FILTER (Purple Track)                -->
+                <!-- ========================================================= -->
+                <div class="ableton-track-strip track-filter" id="track-strip-filter">
+                    <div class="track-strip-header">
+                        <div class="track-header-top">
+                            <span class="track-num">M</span>
+                            <span class="track-title">6581 FILTER BUS</span>
+                            <span class="track-tag">$D415-$D418</span>
+                        </div>
+                        <div class="track-action-bar">
+                            <button class="btn-mini-audition" data-solo="filter" title="Gefilterten Master-Bus vorhören">
+                                <span class="mini-play-icon">▶</span> VORHÖREN
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Device 1: Filter Core -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">ANALOG FILTER CORE</span>
+                        </div>
+                        <div class="param-row">
+                            <label>Filter-Modus:</label>
+                            <select id="u-flt-mode" class="custom-select-sm">
+                                <option value="0x2F" selected>Resonanter Bandpass 12dB</option>
+                                <option value="0x1F">Warmer Tiefpass 12dB</option>
+                                <option value="0x4F">Schneidender Hochpass</option>
+                                <option value="0x5F">Kerbfilter (Notch)</option>
+                            </select>
+                        </div>
+                        <div class="param-row">
+                            <label>Resonanz (Q): <span class="val-badge" id="lbl-u-res">14</span></label>
+                            <input type="range" id="u-flt-res" min="0" max="15" value="14">
+                        </div>
+                    </div>
+
+                    <!-- Device 2: Filter LFO & Routing -->
+                    <div class="ableton-device-rack">
+                        <div class="device-header">
+                            <span class="dev-tag">DEVICE</span>
+                            <span class="dev-name">LFO SWEEP & ROUTING</span>
+                        </div>
+                        <div class="param-grid-2">
+                            <div class="param-row">
+                                <label>LFO Wave:</label>
+                                <select id="u-flt-lfo-shape" class="custom-select-sm">
+                                    <option value="sine" selected>Sinus</option>
+                                    <option value="tri">Dreieck</option>
+                                    <option value="saw">Sägezahn</option>
+                                    <option value="random">S&H Zufall</option>
+                                </select>
+                            </div>
+                            <div class="param-row">
+                                <label>Speed: <span class="val-badge" id="lbl-u-lfo-rate">4.0Hz</span></label>
+                                <input type="range" id="u-flt-lfo-speed" min="5" max="150" value="40">
+                            </div>
+                        </div>
+                        <div class="param-row">
+                            <label>Routing-Maske:</label>
+                            <div class="filter-routing-toggles">
+                                <label><input type="checkbox" id="u-flt-v1" checked> V1</label>
+                                <label><input type="checkbox" id="u-flt-v2" checked> V2</label>
+                                <label><input type="checkbox" id="u-flt-v3"> V3</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 3: MODULARE STRUKTUR & SIGNALFLUSS-FLOWCHART                 -->
+        <!-- ================================================================= -->
+        <main class="flowchart-workspace studio-view" id="view-flowchart" style="display: none;">
+            <!-- Flowchart Header & Mode Switcher -->
+            <div class="flowchart-hero-banner">
+                <div class="hero-text">
+                    <span class="hero-tag">🗺️ MODULARE STRUKTUR & SIGNALFLUSS-FLOWCHART</span>
+                    <h2>Transparente Dekonstruktion aller 3 Stimmen & 6502-Register</h2>
+                    <p>Klicken Sie auf ein beliebiges Modul im Signalfluss, um dessen interne Synthese-Pipeline, Noten, Wellenformen, Hüllkurven und 6502-Register ($D400–$D418) im Röntgen-Inspector zu analysieren und selektiv vorzuhören.</p>
+                </div>
+                <div class="flowchart-quick-tracks">
+                    <span class="qt-label">STRUKTUR LADEN:</span>
+                    <button class="btn-sm active" data-flow-track="sid/Commando.sid">Commando</button>
+                    <button class="btn-sm" data-flow-track="sid/Monty_on_the_Run.sid">Monty on the Run</button>
+                    <button class="btn-sm" data-flow-track="sid/Delta.sid">Delta</button>
+                    <button class="btn-sm" data-flow-track="sid/IK_plus.sid">IK+</button>
+                </div>
+            </div>
+
+            <!-- MACRO SCENE TIMELINE HEADER -->
+            <div class="panel macro-timeline-panel">
+                <div class="timeline-scenes-bar">
+                    <div class="scene-node active" data-scene="1">
+                        <span class="sc-num">SZENE 1</span>
+                        <span class="sc-title">INTRO</span>
+                        <span class="sc-bars">Takte 1–8 (f=0..384)</span>
+                    </div>
+                    <span class="flow-arrow">➔</span>
+                    <div class="scene-node" data-scene="2">
+                        <span class="sc-num">SZENE 2</span>
+                        <span class="sc-title">THEMA A</span>
+                        <span class="sc-bars">Takte 9–16 (f=384..768)</span>
+                    </div>
+                    <span class="flow-arrow">➔</span>
+                    <div class="scene-node" data-scene="3">
+                        <span class="sc-num">SZENE 3</span>
+                        <span class="sc-title">THEMA B</span>
+                        <span class="sc-bars">Takte 17–24 (f=768..1152)</span>
+                    </div>
+                    <span class="flow-arrow">➔</span>
+                    <div class="scene-node" data-scene="4">
+                        <span class="sc-num">SZENE 4</span>
+                        <span class="sc-title">BRIDGE</span>
+                        <span class="sc-bars">Takte 25–32 (f=1152..1536)</span>
+                    </div>
+                    <span class="flow-arrow">➔</span>
+                    <div class="scene-node" data-scene="5">
+                        <span class="sc-num">SZENE 5</span>
+                        <span class="sc-title">CLIMAX</span>
+                        <span class="sc-bars">Takte 33–40 (f=1536..1920)</span>
+                    </div>
+                    <span class="flow-arrow loop">↺ RESTART</span>
+                </div>
+            </div>
+
+            <!-- MAIN 2-COLUMN FLOWCHART & X-RAY INSPECTOR -->
+            <div class="flowchart-grid-layout">
+                <!-- COLUMN 1: INTERACTIVE 4-LANE SIGNALFLOW MATRIX -->
+                <div class="panel flow-lanes-panel">
+                    <div class="panel-header">
+                        <h2>⚡ PARALLELER SIGNALFLUSS ALLER 3 STIMMEN & MASTER-BUS</h2>
+                        <span class="pulse-status"><span class="pulse-dot"></span> SIGNALFLUSS AKTIV</span>
+                    </div>
+
+                    <div class="flow-lanes-container">
+                        <!-- LANE 1: VOICE 1 (LEAD SOLO - CYAN) -->
+                        <div class="flow-lane lane-v1">
+                            <div class="lane-label">
+                                <span class="lane-num">V1</span>
+                                <span class="lane-name">LEAD SOLO</span>
+                                <span class="lane-reg">$D400-$D406</span>
+                            </div>
+                            <div class="lane-nodes">
+                                <div class="flow-block active" id="fnode-v1-s1" data-node="v1_s1">
+                                    <span class="fb-tag">FANFARE & SCOOP</span>
+                                    <span class="fb-title">E-7 Signalhorn</span>
+                                    <span class="fb-detail">Tri+RingMod $15 | -2 HT</span>
+                                    <button class="btn-node-audition" data-node-audition="v1" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v1">➔</span>
+                                <div class="flow-block" id="fnode-v1-s2" data-node="v1_s2">
+                                    <span class="fb-tag">HAUPTTHEMA A</span>
+                                    <span class="fb-title">Heroic A4-C5 Lead</span>
+                                    <span class="fb-detail">Pulse $41 | Triller | Vibrato</span>
+                                    <button class="btn-node-audition" data-node-audition="v1" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v1">➔</span>
+                                <div class="flow-block" id="fnode-v1-s3" data-node="v1_s3">
+                                    <span class="fb-tag">LYRISCHE VAR</span>
+                                    <span class="fb-title">Terzen-Linie E5-G5</span>
+                                    <span class="fb-detail">Appoggiatura +2 HT</span>
+                                    <button class="btn-node-audition" data-node-audition="v1" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v1">➔</span>
+                                <div class="flow-block" id="fnode-v1-s4" data-node="v1_s4">
+                                    <span class="fb-tag">PASSING SOLO</span>
+                                    <span class="fb-title">Staccato 16tel</span>
+                                    <span class="fb-detail">Saw $21 | Chromatik</span>
+                                    <button class="btn-node-audition" data-node-audition="v1" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v1">➔</span>
+                                <div class="flow-block" id="fnode-v1-s5" data-node="v1_s5">
+                                    <span class="fb-tag">OKTAV-RISER</span>
+                                    <span class="fb-title">+12 HT Climax Peak</span>
+                                    <span class="fb-detail">A5-C6 High Register</span>
+                                    <button class="btn-node-audition" data-node-audition="v1" title="Vorhören">▶</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LANE 2: VOICE 2 (ARPEGGIO CHORDS - YELLOW) -->
+                        <div class="flow-lane lane-v2">
+                            <div class="lane-label">
+                                <span class="lane-num">V2</span>
+                                <span class="lane-name">ARPEGGIO</span>
+                                <span class="lane-reg">$D407-$D40D</span>
+                            </div>
+                            <div class="lane-nodes">
+                                <div class="flow-block" id="fnode-v2-s1" data-node="v2_s1">
+                                    <span class="fb-tag">3-TON PULSE ARP</span>
+                                    <span class="fb-title">Am → F → Dm → E7</span>
+                                    <span class="fb-detail">50Hz (1f/Note) | $43</span>
+                                    <button class="btn-node-audition" data-node-audition="v2" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v2">➔</span>
+                                <div class="flow-block" id="fnode-v2-s2" data-node="v2_s2">
+                                    <span class="fb-tag">4-TON m7 CHORD</span>
+                                    <span class="fb-title">Am7 Harmonik</span>
+                                    <span class="fb-detail">1.25Hz PWM Chorus</span>
+                                    <button class="btn-node-audition" data-node-audition="v2" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v2">➔</span>
+                                <div class="flow-block" id="fnode-v2-s3" data-node="v2_s3">
+                                    <span class="fb-tag">EXTENDED m9</span>
+                                    <span class="fb-title">Quintfall Dm9→G7</span>
+                                    <span class="fb-detail">5-Step Jazz Arp</span>
+                                    <button class="btn-node-audition" data-node-audition="v2" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v2">➔</span>
+                                <div class="flow-block" id="fnode-v2-s4" data-node="v2_s4">
+                                    <span class="fb-tag">PWM PAD</span>
+                                    <span class="fb-title">Streicher-Fläche</span>
+                                    <span class="fb-detail">Haltetöne ohne Arp</span>
+                                    <button class="btn-node-audition" data-node-audition="v2" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v2">➔</span>
+                                <div class="flow-block" id="fnode-v2-s5" data-node="v2_s5">
+                                    <span class="fb-tag">m11 KASKADE</span>
+                                    <span class="fb-title">Lightforce 6-Step</span>
+                                    <span class="fb-detail">A-C-E-G-A-D Arp</span>
+                                    <button class="btn-node-audition" data-node-audition="v2" title="Vorhören">▶</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LANE 3: VOICE 3 (SLAP BASS & DRUMS - GREEN) -->
+                        <div class="flow-lane lane-v3">
+                            <div class="lane-label">
+                                <span class="lane-num">V3</span>
+                                <span class="lane-name">BASS & DRUMS</span>
+                                <span class="lane-reg">$D40E-$D414</span>
+                            </div>
+                            <div class="lane-nodes">
+                                <div class="flow-block" id="fnode-v3-s1" data-node="v3_s1">
+                                    <span class="fb-tag">16tel-GALOPP</span>
+                                    <span class="fb-title">A-1 Militär-Bass</span>
+                                    <span class="fb-detail">BD 1 / SD 2,4 Mux</span>
+                                    <button class="btn-node-audition" data-node-audition="v3_bass" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v3">➔</span>
+                                <div class="flow-block" id="fnode-v3-s2" data-node="v3_s2">
+                                    <span class="fb-tag">SLAP-POPS</span>
+                                    <span class="fb-title">A1 → A2 Oktavsprung</span>
+                                    <span class="fb-detail">6f Snare-Roll Fill</span>
+                                    <button class="btn-node-audition" data-node-audition="v3_bass" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v3">➔</span>
+                                <div class="flow-block" id="fnode-v3-s3" data-node="v3_s3">
+                                    <span class="fb-tag">WALKING BASS</span>
+                                    <span class="fb-title">Kontrapunkt-Linie</span>
+                                    <span class="fb-detail">8tel Synkopen + HH</span>
+                                    <button class="btn-node-audition" data-node-audition="v3_bass" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v3">➔</span>
+                                <div class="flow-block" id="fnode-v3-s4" data-node="v3_s4">
+                                    <span class="fb-tag">STRIDE BASS</span>
+                                    <span class="fb-title">Tonika Staccato</span>
+                                    <span class="fb-detail">Tight Damping ADSR</span>
+                                    <button class="btn-node-audition" data-node-audition="v3_bass" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line v3">➔</span>
+                                <div class="flow-block" id="fnode-v3-s5" data-node="v3_s5">
+                                    <span class="fb-tag">RAPID ROLLS</span>
+                                    <span class="fb-title">2-Frame Snare Burst</span>
+                                    <span class="fb-detail">Galois LFSR Noise $81</span>
+                                    <button class="btn-node-audition" data-node-audition="drums" title="Vorhören">▶</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MASTER SUM BUS (MOS 6581 ANALOG FILTER - PURPLE) -->
+                        <div class="flow-lane lane-flt">
+                            <div class="lane-label">
+                                <span class="lane-num">SUM</span>
+                                <span class="lane-name">6581 FILTER</span>
+                                <span class="lane-reg">$D415-$D418</span>
+                            </div>
+                            <div class="lane-nodes">
+                                <div class="flow-block" id="fnode-flt-s1" data-node="flt_s1">
+                                    <span class="fb-tag">DRY / BYPASS</span>
+                                    <span class="fb-title">Ungefiltert</span>
+                                    <span class="fb-detail">Vol 15 | Voller Headroom</span>
+                                    <button class="btn-node-audition" data-node-audition="filter" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line flt">➔</span>
+                                <div class="flow-block" id="fnode-flt-s2" data-node="flt_s2">
+                                    <span class="fb-tag">WARM TIEFPASS</span>
+                                    <span class="fb-title">12dB LP $1F</span>
+                                    <span class="fb-detail">Cutoff 1.2 kHz</span>
+                                    <button class="btn-node-audition" data-node-audition="filter" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line flt">➔</span>
+                                <div class="flow-block" id="fnode-flt-s3" data-node="flt_s3">
+                                    <span class="fb-tag">BANDPASS Q=14</span>
+                                    <span class="fb-title">Signature BP $2F</span>
+                                    <span class="fb-detail">Resonanz $D417=$E7</span>
+                                    <button class="btn-node-audition" data-node-audition="filter" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line flt">➔</span>
+                                <div class="flow-block" id="fnode-flt-s4" data-node="flt_s4">
+                                    <span class="fb-tag">FILTER-DROP</span>
+                                    <span class="fb-title">LFO Sweep Sweep</span>
+                                    <span class="fb-detail">400Hz - 3.2kHz Sweep</span>
+                                    <button class="btn-node-audition" data-node-audition="filter" title="Vorhören">▶</button>
+                                </div>
+                                <span class="connector-line flt">➔</span>
+                                <div class="flow-block" id="fnode-flt-s5" data-node="flt_s5">
+                                    <span class="fb-tag">SATURATION</span>
+                                    <span class="fb-title">Nonlinear Clipping</span>
+                                    <span class="fb-detail">Analog Soft-Limiter</span>
+                                    <button class="btn-node-audition" data-node-audition="filter" title="Vorhören">▶</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: DEEP X-RAY INSPECTOR & MODULE RESOLUTION -->
+                <div class="panel xray-inspector-panel" id="xray-inspector-panel">
+                    <div class="panel-header">
+                        <div class="title-wrap">
+                            <span class="elem-badge v1" id="xray-badge">MODUL: V1_S1</span>
+                            <h2 id="xray-title">FANFARE & PITCH-SCOOP ENGINE</h2>
+                        </div>
+                        <button class="btn-mini-audition active" id="btn-xray-audition">
+                            <span class="mini-play-icon">▶</span> MODUL VORHÖREN
+                        </button>
+                    </div>
+
+                    <!-- Synthesis Chain Diagram -->
+                    <div class="xray-section">
+                        <span class="xray-sec-title">🔬 SYNTHESE-PIPELINE & SIGNALWEG</span>
+                        <div class="synth-pipeline-flow">
+                            <div class="pipe-box"><span class="pb-tag">OSC</span><span class="pb-val" id="xray-pipe-osc">Voice 1</span></div>
+                            <span class="pipe-arr">➔</span>
+                            <div class="pipe-box"><span class="pb-tag">WAVE</span><span class="pb-val" id="xray-pipe-wave">Tri+Ring $15</span></div>
+                            <span class="pipe-arr">➔</span>
+                            <div class="pipe-box"><span class="pb-tag">PITCH FX</span><span class="pb-val" id="xray-pipe-pitch">Scoop -2 HT</span></div>
+                            <span class="pipe-arr">➔</span>
+                            <div class="pipe-box"><span class="pb-tag">ADSR</span><span class="pb-val" id="xray-pipe-adsr">$09 / $00</span></div>
+                            <span class="pipe-arr">➔</span>
+                            <div class="pipe-box"><span class="pb-tag">OUTPUT</span><span class="pb-val" id="xray-pipe-out">Filter Bus</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 6502 Machine Code Register Snapshot -->
+                    <div class="xray-section">
+                        <span class="xray-sec-title">💾 6502 HARDWARE-REGISTER STATUS ($D400-$D418)</span>
+                        <div class="xray-reg-grid" id="xray-reg-grid">
+                            <!-- Dynamic 25 Register Cells -->
+                        </div>
+                    </div>
+
+                    <!-- Musical Analysis & Telemetry -->
+                    <div class="xray-section">
+                        <span class="xray-sec-title">🎼 MUSIKALISCHE ANALYSE & NOTEN-DATEN</span>
+                        <div class="xray-music-info" id="xray-music-info">
+                            <div class="minfo-row">
+                                <span class="m-key">Noten-Events:</span>
+                                <span class="m-val" id="xray-notes">E-7 (2636.1 Hz) ➔ G-4 ➔ A-4</span>
+                            </div>
+                            <div class="minfo-row">
+                                <span class="m-key">Harmonische Funktion:</span>
+                                <span class="m-val" id="xray-harmony">Dominant-Signalhorn & Vorhalts-Triller</span>
+                            </div>
+                            <div class="minfo-row">
+                                <span class="m-key">Mikro-Timing:</span>
+                                <span class="m-val" id="xray-timing">4 Frames Scoop (Exponentiell), 50Hz PAL Clock</span>
+                            </div>
+                            <div class="minfo-row">
+                                <span class="m-key">Remix-Einflussbereich:</span>
+                                <span class="m-val highlight" id="xray-remix-hint">Im Remix-Labor steuerbar über Stimme 1 Scoop-Offset & Triller-Dichte</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 4: HYBRID VOICE SPLICING (MULTI-SID REKOMBINATION)           -->
+        <!-- ================================================================= -->
+        <main class="hybrid-workspace studio-view" id="view-hybrid" style="display: none;">
+            <div class="remix-hero-banner">
+                <div class="hero-text">
+                    <span class="hero-tag">🔀 MULTI-TRACK REKOMBINATION</span>
+                    <h2>Hybrid Voice Splicer (Hubbard Allstars)</h2>
+                    <p>Verschmelzen Sie Stimmen aus unterschiedlichen Originalwerken (z.B. Lead aus <em>Commando</em> + Arpeggien aus <em>Monty on the Run</em> + Slap-Bass aus <em>IK+</em>).</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn-primary-neon" id="btn-render-hybrid">
+                        <span class="icon">✨</span> HYBRID REKOMBINIEREN & ABSPIELEN
+                    </button>
+                    <button class="btn-secondary" id="btn-export-hybrid-sid">
+                        💾 .SID DATEI EXPORTIEREN
+                    </button>
+                </div>
+            </div>
+
+            <div class="hybrid-grid">
+                <!-- Voice 1 Source -->
+                <div class="panel hybrid-card">
+                    <div class="elem-header">
+                        <div class="elem-title">
+                            <span class="elem-badge v1">STIMME 1</span>
+                            <h3>LEAD-MELODIE QUELLE</h3>
+                        </div>
+                    </div>
+                    <p class="hybrid-desc">Liefert die solistische Hauptmelodie, Pitch-Scoops und Vibrato.</p>
+                    <div class="control-row">
+                        <label>Wähle Original-SID für Stimme 1:</label>
+                        <select id="hybrid-v1-select" class="custom-select">
+                            <!-- Dynamic Tracks -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Voice 2 Source -->
+                <div class="panel hybrid-card">
+                    <div class="elem-header">
+                        <div class="elem-title">
+                            <span class="elem-badge v2">STIMME 2</span>
+                            <h3>HARMONIE & ARPEGGIO QUELLE</h3>
+                        </div>
+                    </div>
+                    <p class="hybrid-desc">Liefert die 50Hz-Akkordbrechung und harmonische Dichte.</p>
+                    <div class="control-row">
+                        <label>Wähle Original-SID für Stimme 2:</label>
+                        <select id="hybrid-v2-select" class="custom-select">
+                            <!-- Dynamic Tracks -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Voice 3 Source -->
+                <div class="panel hybrid-card">
+                    <div class="elem-header">
+                        <div class="elem-title">
+                            <span class="elem-badge v3">STIMME 3</span>
+                            <h3>BASS & DRUMS QUELLE</h3>
+                        </div>
+                    </div>
+                    <p class="hybrid-desc">Liefert das rhythmische Slap-Bass- und Perkussions-Fundament.</p>
+                    <div class="control-row">
+                        <label>Wähle Original-SID für Stimme 3:</label>
+                        <select id="hybrid-v3-select" class="custom-select">
+                            <!-- Dynamic Tracks -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- VIEW 4: 50-KRITERIEN & 6502 MACHINE CODE TELEMETRY                -->
+        <!-- ================================================================= -->
+        <main class="telemetry-workspace studio-view" id="view-telemetry" style="display: none;">
+            <div class="telemetry-grid">
+                <!-- 50-Criteria Score Radar -->
+                <div class="panel criteria-panel">
+                    <div class="panel-header">
+                        <h2>📊 50-KRITERIEN ANALYSE DES AKTUELLEN TRACKS</h2>
+                        <span class="badge" id="tele-track-name">Commando.sid</span>
+                    </div>
+                    <div class="scores-list" id="scores-list">
+                        <div class="score-row">
+                            <div class="score-label"><span>1. Timbre & Waveform Morphing (Ringmod/Noise)</span><span class="score-num" id="sc-timbre">95%</span></div>
+                            <div class="score-bar"><div class="score-fill" id="bar-timbre" style="width: 95%;"></div></div>
+                        </div>
+                        <div class="score-row">
+                            <div class="score-label"><span>2. Harmonische Dichte (50Hz m7/m9/m11 Arps)</span><span class="score-num" id="sc-harmony">92%</span></div>
+                            <div class="score-bar"><div class="score-fill" id="bar-harmony" style="width: 92%;"></div></div>
+                        </div>
+                        <div class="score-row">
+                            <div class="score-label"><span>3. Rhythmik & Slap-Bass Synkopation</span><span class="score-num" id="sc-rhythm">96%</span></div>
+                            <div class="score-bar"><div class="score-fill" id="bar-rhythm" style="width: 96%;"></div></div>
+                        </div>
+                        <div class="score-row">
+                            <div class="score-label"><span>4. Dynamische Filter-Resonanz ($D415-$D418)</span><span class="score-num" id="sc-filter">88%</span></div>
+                            <div class="score-bar"><div class="score-fill" id="bar-filter" style="width: 88%;"></div></div>
+                        </div>
+                        <div class="score-row">
+                            <div class="score-label"><span>5. Sub-Frame Mikro-Effekte & Pitch-Scoops</span><span class="score-num" id="sc-microfx">98%</span></div>
+                            <div class="score-bar"><div class="score-fill" id="bar-microfx" style="width: 98%;"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6502 Register Telemetry Matrix ($D400-$D418) -->
+                <div class="panel register-telemetry-panel">
+                    <div class="panel-header">
+                        <h2>📟 6502 SID-REGISTER TELEMETRIE ($D400 - $D418)</h2>
+                        <span class="badge">CYCLE-ACCURATE</span>
+                    </div>
+                    <div class="reg-grid" id="reg-grid">
+                        <!-- 25 Register Cells -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================================================================= -->
+        <!-- GLOBAL FLOATING TRANSPORT BAR                                     -->
+        <!-- ================================================================= -->
+        <footer class="global-transport-bar">
+            <div class="transport-buttons">
+                <button class="transport-btn main-play" id="btn-play">
+                    <span class="icon">▶</span> <span id="play-text">PLAY</span>
+                </button>
+                <button class="transport-btn" id="btn-stop">
+                    <span class="icon">⏹</span> STOP
+                </button>
+                <button class="transport-btn toggle" id="btn-loop">
+                    <span class="icon">🔁</span> LOOP
+                </button>
+            </div>
+
+            <div class="transport-time-info">
+                <span class="time-readout" id="global-time">00:00 / 00:00</span>
+                <span class="active-track-label" id="global-track-label">Kein Track aktiv</span>
+            </div>
+
+            <div class="export-actions">
+                <button class="btn-secondary" id="btn-download-wav">
+                    💾 WAV MASTER EXPORTIEREN
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <audio id="audio-player" preload="auto"></audio>
+    <script src="app.js"></script>
+</body>
+</html>

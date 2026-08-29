@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="slate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTF Studio Pro | Hubbard Tracker Format v1.0 • 6502 Master Station</title>
+    <link rel="stylesheet" href="tracker2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700;900&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="htf-body">
+    <div class="htf-container">
+
+        <!-- ================================================================= -->
+        <!-- 1. TOP HEADER: BRANDING, 19 SIDS, THEMES & HELP                   -->
+        <!-- ================================================================= -->
+        <header class="htf-header">
+            <div class="htf-brand">
+                <span class="htf-badge">HTF PRO v1.0</span>
+                <div class="htf-titles">
+                    <h1>HUBBARD TRACKER STUDIO</h1>
+                    <span class="htf-sub" id="htf-sub-info">COMMANDO • 3 Voices PAL 50Hz • 6502 Master Engine</span>
+                </div>
+            </div>
+
+            <!-- SID Selector for all 19 SIDs -->
+            <div class="htf-sid-loader">
+                <label for="htf-sid-select">SID:</label>
+                <select id="htf-sid-select" class="custom-select">
+                    <option value="sid/Commando.sid" selected>01. Commando (1985)</option>
+                    <option value="sid/Monty_on_the_Run.sid">02. Monty on the Run (1985)</option>
+                    <option value="sid/Delta.sid">03. Delta (1987)</option>
+                    <option value="sid/IK_plus.sid">04. International Karate + (1987)</option>
+                    <option value="sid/Crazy_Comets.sid">05. Crazy Comets (1985)</option>
+                    <option value="sid/Sanxion.sid">06. Sanxion (1986)</option>
+                    <option value="sid/Spellbound.sid">07. Spellbound (1985)</option>
+                    <option value="sid/Warhawk.sid">08. Warhawk (1986)</option>
+                    <option value="sid/Master_of_Magic.sid">09. Master of Magic (1985)</option>
+                    <option value="sid/Zoids.sid">10. Zoids (1985)</option>
+                    <option value="sid/Flash_Gordon.sid">11. Flash Gordon (1986)</option>
+                    <option value="sid/Lightforce.sid">12. Lightforce (1986)</option>
+                    <option value="sid/Nemesis_the_Warlock.sid">13. Nemesis the Warlock (1987)</option>
+                    <option value="sid/Last_V8.sid">14. The Last V8 (1985)</option>
+                    <option value="sid/I_Ball.sid">15. I-Ball (1987)</option>
+                    <option value="sid/Knucklebusters.sid">16. Knucklebusters (1986)</option>
+                    <option value="sid/Mega_Apocalypse.sid">17. Mega Apocalypse (1987)</option>
+                    <option value="sid/Kentilla.sid">18. Kentilla (1986)</option>
+                    <option value="sid/Chimera.sid">19. Chimera (1985)</option>
+                </select>
+                <button class="btn-primary-sm" id="btn-htf-decompile" title="Aktuell gewähltes SID neu analysieren">📥 DECOMPILIEREN</button>
+                
+                <!-- Theme Switcher -->
+                <select id="sel-theme" class="custom-select-theme" title="Farbschema wählen">
+                    <option value="slate" selected>🎨 Cyber Slate</option>
+                    <option value="ft2">📟 FastTracker II</option>
+                    <option value="c64">📼 C64 Classic Blue</option>
+                    <option value="matrix">💻 Matrix Green</option>
+                    <option value="dracula">🧛 Dracula Pro</option>
+                </select>
+
+                <!-- MIDI Status -->
+                <div class="midi-badge" id="midi-status" title="Web MIDI Status">🎹 MIDI: BEREIT</div>
+
+                <!-- Help Button -->
+                <button class="btn-secondary-sm" id="btn-help" title="Tastaturkürzel & Hilfe (F1)">❓ HILFE [F1]</button>
+                <a href="tracker.html" class="btn-secondary-sm" title="Zum klassischen 3-Spuren Tracker">KLASSISCH</a>
+                <a href="index.html" class="btn-secondary-sm" title="Zum Ableton Remix Studio">ABLETON</a>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- 2. MODULAR SONG ARRANGER & TIMELINE MATRIX                         -->
+        <!-- ================================================================= -->
+        <div class="htf-order-bar">
+            <div class="order-label-group">
+                <span class="order-tag">SONG-ARRANGEMENT (ORDER LIST):</span>
+                <span class="order-sub" id="order-sub-stat">4 PHRASEN • 16 TAKTE • 0:30 MIN</span>
+            </div>
+            
+            <div class="order-slots" id="order-slots-container">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <div class="order-actions">
+                <button class="btn-xs" id="btn-add-order" title="Neuen Pattern-Slot am Ende anfügen">+ SLOT</button>
+                <button class="btn-xs" id="btn-dup-order" title="Aktuellen Slot duplizieren">⧉ DUPLIZIEREN</button>
+                <button class="btn-xs btn-del" id="btn-del-order" title="Aktuellen Slot löschen">🗑️ LÖSCHEN</button>
+                <button class="btn-xs" id="btn-move-left" title="Slot nach links verschieben">◄</button>
+                <button class="btn-xs" id="btn-move-right" title="Slot nach rechts verschieben">►</button>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 3. TRANSPORT, EDITING & ADVANCED TOOLBAR                           -->
+        <!-- ================================================================= -->
+        <section class="htf-transport-bar">
+            <!-- Transport Controls -->
+            <div class="transport-group">
+                <button class="t-btn btn-play" id="btn-play-song" title="Ganzen Song abspielen (Space)">
+                    <span class="icon">▶</span> SONG
+                </button>
+                <button class="t-btn btn-play-pat" id="btn-play-pat" title="Aktuelles Pattern loopen">
+                    <span class="icon">🔁</span> PATTERN
+                </button>
+                <button class="t-btn btn-stop" id="btn-stop" title="Stoppen (Esc)">
+                    <span class="icon">⏹</span> STOP
+                </button>
+                <button class="t-btn btn-rec active" id="btn-rec-mode" title="Edit-Modus aktiv">
+                    <span class="rec-dot"></span> EDIT
+                </button>
+            </div>
+
+            <!-- Parameters: BPM, Speed, Clock, Octave, Duration, Step -->
+            <div class="params-group">
+                <div class="param-box">
+                    <label>BPM</label>
+                    <input type="number" id="inp-bpm" min="40" max="240" value="125">
+                </div>
+                <div class="param-box">
+                    <label>SPEED</label>
+                    <input type="number" id="inp-speed" min="1" max="16" value="6" title="Frames pro 16tel-Schritt">
+                </div>
+                <div class="param-box">
+                    <label>CLOCK</label>
+                    <select id="sel-clock" title="Taktfrequenz des SID">
+                        <option value="pal" selected>PAL (50Hz)</option>
+                        <option value="ntsc">NTSC (60Hz)</option>
+                    </select>
+                </div>
+                <div class="param-box">
+                    <label>OKT</label>
+                    <input type="number" id="inp-octave" min="1" max="7" value="4">
+                </div>
+                <div class="param-box">
+                    <label>DAUER</label>
+                    <select id="sel-default-dur" title="Standard-Notenlänge">
+                        <option value="L01">L01 (20ms)</option>
+                        <option value="L02">L02 (40ms)</option>
+                        <option value="L04">L04 (80ms)</option>
+                        <option value="L06" selected>L06 (120ms / 16tel)</option>
+                        <option value="L12">L12 (240ms / 8tel)</option>
+                        <option value="L24">L24 (480ms / 4tel)</option>
+                        <option value="L48">L48 (960ms / Takt)</option>
+                    </select>
+                </div>
+                <div class="param-box">
+                    <label>STEP</label>
+                    <input type="number" id="inp-step" min="0" max="16" value="1">
+                </div>
+                <div class="param-box">
+                    <label>PATTERN</label>
+                    <select id="sel-active-pat">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- Pattern Transformation & Clipboard Toolkit -->
+            <div class="toolkit-group">
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-undo" title="Rückgängig (Ctrl+Z)">↩</button>
+                    <button class="tool-btn" id="btn-redo" title="Wiederherstellen (Ctrl+Y)">↪</button>
+                </div>
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-copy-trk" title="Spur kopieren (Ctrl+C)">COPY</button>
+                    <button class="tool-btn" id="btn-paste-trk" title="Spur einfügen (Ctrl+V)">PASTE</button>
+                </div>
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-trans-trk-up" title="Aktive Spur +1 Halbton">+1</button>
+                    <button class="tool-btn" id="btn-trans-trk-dn" title="Aktive Spur -1 Halbton">-1</button>
+                    <button class="tool-btn" id="btn-trans-oct-up" title="Aktive Spur +1 Oktave">+12</button>
+                    <button class="tool-btn" id="btn-trans-oct-dn" title="Aktive Spur -1 Oktave">-12</button>
+                </div>
+                <div class="tool-btn-group">
+                    <select id="sel-quantize" class="custom-select-xs" title="Tonleiter-Quantisierung">
+                        <option value="none">Skala: Alle Töne</option>
+                        <option value="minor">Natürlich Moll</option>
+                        <option value="harm_minor">Harmonisch Moll</option>
+                        <option value="major">Dur</option>
+                        <option value="pentatonic">Pentatonik</option>
+                        <option value="blues">Blues Skala</option>
+                    </select>
+                    <button class="tool-btn" id="btn-apply-scale" title="Skala anwenden">QUANT</button>
+                </div>
+                <div class="tool-btn-group">
+                    <button class="tool-btn" id="btn-reverse-pat" title="Pattern umkehren">REV</button>
+                    <button class="tool-btn" id="btn-invert-pat" title="Noten spiegeln">INV</button>
+                    <button class="tool-btn" id="btn-insert-noteoff" title="Note-Off einfügen (Key 1 / ===)">=== OFF</button>
+                </div>
+            </div>
+
+            <!-- Export Suite -->
+            <div class="export-group">
+                <button class="btn-exp sid" id="btn-export-sid" title="Als spielbare C64 .SID-Datei exportieren">💾 .SID</button>
+                <button class="btn-exp htf" id="btn-export-htf" title="Als HTF JSON-Projekt speichern">📄 .HTF</button>
+                <button class="btn-exp mid" id="btn-export-midi" title="Als Standard MIDI-File für Ableton/DAW">🎹 .MID</button>
+                <button class="btn-exp wav" id="btn-export-wav" title="Als 44.1kHz WAV Audio rendern">🔊 .WAV</button>
+                <button class="btn-exp stems" id="btn-export-stems" title="3 Spuren als separate WAV Stems exportieren">🎚️ STEMS</button>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 4. MAIN 3-COLUMN WORKBENCH                                         -->
+        <!-- ================================================================= -->
+        <div class="htf-main-grid">
+
+            <!-- ============================================================= -->
+            <!-- 4.1 LEFT: INSTRUMENT LAB, PRESETS, ADSR GRAPH & KEYBOARD      -->
+            <!-- ============================================================= -->
+            <aside class="htf-left-panel">
+                <!-- Instrument List & Presets -->
+                <div class="panel-section inst-section">
+                    <div class="sec-header">
+                        <span>🎹 INSTRUMENTE & PRESETS</span>
+                        <select id="sel-preset-bank" class="custom-select-xs" title="Rob Hubbard Signature Preset laden">
+                            <option value="">-- PRESET LADEN --</option>
+                            <option value="commando_lead">01. Commando Heroic Lead</option>
+                            <option value="monty_violin">02. Monty Hi-Speed Violin</option>
+                            <option value="delta_space_arp">03. Delta Space Arpeggio</option>
+                            <option value="ik_slap_bass">04. IK+ 16th Slap Bass</option>
+                            <option value="sanxion_snare">05. Sanxion Noise Snare</option>
+                            <option value="crazy_laser">06. Crazy Comets Laser Sync</option>
+                            <option value="spellbound_bass">07. Spellbound Dark Sub</option>
+                            <option value="magic_flute">08. Master of Magic Flute</option>
+                            <option value="lightforce_arp">09. Lightforce m11 Arp</option>
+                            <option value="warhawk_kick">10. Warhawk Heavy Kick</option>
+                            <option value="knuckle_metal">11. Knucklebusters RingMod</option>
+                            <option value="mega_brass">12. Mega Apocalypse Brass</option>
+                            <option value="kentilla_pad">13. Kentilla Soft Pad</option>
+                            <option value="lastv8_riser">14. Last V8 Nitro Riser</option>
+                            <option value="iball_clav">15. I-Ball Funk Clavinet</option>
+                            <option value="zoids_drone">16. Zoids Cyber Drone</option>
+                            <option value="flash_fanfare">17. Flash Gordon Fanfare</option>
+                            <option value="chimera_bell">18. Chimera Dream Bell</option>
+                            <option value="thrust_stomp">19. Thrust Noise Stomp</option>
+                            <option value="hubbard_pop">20. Hubbard Slap Pop</option>
+                        </select>
+                    </div>
+                    <div class="inst-list" id="htf-inst-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Comprehensive Instrument Patch Editor -->
+                <div class="panel-section editor-section">
+                    <div class="sec-header">
+                        <span id="htf-editor-title">#01 HEROIC PULSE LEAD</span>
+                        <span class="reg-tag" id="htf-editor-reg">$D400-$D406</span>
+                    </div>
+                    <div class="editor-body">
+                        <!-- Waveform Group & Hardware Modulation -->
+                        <div class="ctrl-row">
+                            <div class="lbl-flex">
+                                <label class="ctrl-lbl">WELLENFORM & HARDWARE-FLAGS:</label>
+                                <span class="val-txt" id="lbl-wave-hex">$41 (Puls)</span>
+                            </div>
+                            <div class="wave-buttons">
+                                <button class="btn-w active" data-wave="0x41" title="Rechteck/Puls mit Pulsbreite">⎍ $41</button>
+                                <button class="btn-w" data-wave="0x21" title="Sägezahn">▲ $21</button>
+                                <button class="btn-w" data-wave="0x11" title="Dreieck">~ $11</button>
+                                <button class="btn-w" data-wave="0x81" title="Rauschen / Galois LFSR">▒ $81</button>
+                                <button class="btn-w" data-wave="0x15" title="Dreieck + Ring-Modulation (V1xV3)">▲🔔 $15</button>
+                                <button class="btn-w" data-wave="0x43" title="Puls + Hard-Sync (V1->V2)">⎍⚙ $43</button>
+                            </div>
+                        </div>
+
+                        <!-- Pulse Width & PWM LFO -->
+                        <div class="ctrl-row">
+                            <div class="lbl-flex">
+                                <label class="ctrl-lbl">PULSBREITE (PW):</label>
+                                <span class="val-txt" id="lbl-htf-pw">2048 (50%)</span>
+                            </div>
+                            <div class="pw-ctrl-box">
+                                <input type="range" id="htf-pw" min="0" max="4095" value="2048">
+                                <div class="pw-duty-bar"><div class="pw-duty-fill" id="pw-duty-fill" style="width: 50%;"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- PWM LFO Controller -->
+                        <div class="ctrl-row-sub">
+                            <div class="sub-ctrl">
+                                <label>PWM LFO:</label>
+                                <input type="range" id="htf-pwm-rate" min="0" max="20" value="0" step="0.5" title="PWM LFO Frequenz">
+                                <span id="lbl-pwm-rate">OFF</span>
+                            </div>
+                            <div class="sub-ctrl">
+                                <label>TIEFE:</label>
+                                <input type="range" id="htf-pwm-depth" min="0" max="100" value="0" title="PWM Modulationstiefe">
+                                <span id="lbl-pwm-depth">0%</span>
+                            </div>
+                        </div>
+
+                        <!-- ADSR Sliders & Real-Time Graph -->
+                        <div class="ctrl-row">
+                            <div class="lbl-flex">
+                                <label class="ctrl-lbl">ADSR HÜLLKURVE:</label>
+                                <span class="val-txt" id="lbl-adsr-time">A: 2ms | D: 375ms | S: 0% | R: 6ms</span>
+                            </div>
+                            <div class="adsr-visualizer">
+                                <canvas id="adsr-canvas" width="230" height="36"></canvas>
+                            </div>
+                            <div class="adsr-grid">
+                                <div class="adsr-col"><label>A</label><input type="range" id="htf-att" min="0" max="15" value="0"><span id="lbl-htf-att">0</span></div>
+                                <div class="adsr-col"><label>D</label><input type="range" id="htf-dec" min="0" max="15" value="9"><span id="lbl-htf-dec">9</span></div>
+                                <div class="adsr-col"><label>S</label><input type="range" id="htf-sus" min="0" max="15" value="0"><span id="lbl-htf-sus">0</span></div>
+                                <div class="adsr-col"><label>R</label><input type="range" id="htf-rel" min="0" max="15" value="0"><span id="lbl-htf-rel">0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tick Macro Modifier -->
+                        <div class="ctrl-row">
+                            <label class="ctrl-lbl">SUB-TICK MACRO MODULATOR:</label>
+                            <select id="htf-macro-select" class="custom-select-sm">
+                                <option value="scoop" selected>P02: Pitch-Scoop (-2 Halbtöne Einschwingen)</option>
+                                <option value="vibrato">V08: Delayed Vibrato (5.5Hz LFO nach 8 Frames)</option>
+                                <option value="arp_m7">A-m7: 50Hz Arpeggio (Moll 7: +0, +3, +7, +10)</option>
+                                <option value="arp_m9">A-m9: 50Hz Arpeggio (Moll 9: +0, +3, +7, +14)</option>
+                                <option value="arp_m11">A-m11: 50Hz Arpeggio (Lightforce: +0, +3, +7, +17)</option>
+                                <option value="slap">S12: Slap-Bass Oktav-Pop (+12 HT Offbeat)</option>
+                                <option value="drum_sd">D-SD: Stimme-3 Snare Interrupt</option>
+                                <option value="drum_bd">D-BD: Stimme-3 Kick Interrupt</option>
+                                <option value="custom_arp">A-CUST: Benutzerdefinierte Arp-Tabelle</option>
+                                <option value="none">Kein Macro (Statisch)</option>
+                            </select>
+                        </div>
+
+                        <!-- Custom Arp Table Input (shown when custom arp is selected) -->
+                        <div class="ctrl-row" id="row-custom-arp" style="display: none;">
+                            <label class="ctrl-lbl">BENUTZERDEFINIERTE ARP-HALBTÖNE (KOMMAGETRENNT):</label>
+                            <input type="text" id="htf-custom-arp-input" class="custom-input-text" value="0, 3, 7, 10, 12, 7, 3, 0">
+                        </div>
+
+                        <!-- Filter Route Toggle -->
+                        <div class="ctrl-row-toggle">
+                            <label class="ctrl-lbl">ROUTING ZUM MASTER-FILTER:</label>
+                            <input type="checkbox" id="chk-filter-route" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Virtual & PC Piano Keyboard -->
+                <div class="panel-section piano-section">
+                    <div class="sec-header">
+                        <span>🎹 LIVE-KEYBOARD (AKTIVES INSTRUMENT SPIELEN)</span>
+                        <div class="oct-switcher">
+                            <button class="btn-oct" id="btn-oct-dn">-</button>
+                            <span id="lbl-cur-oct">OKT: 4</span>
+                            <button class="btn-oct" id="btn-oct-up">+</button>
+                        </div>
+                    </div>
+                    <div class="htf-piano-wrapper" id="htf-piano-keyboard">
+                        <!-- Keys rendered by JS -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ============================================================= -->
+            <!-- 4.2 CENTER: 3-TRACK HTF MATRIX WITH SOLO / MUTE & VU METERS    -->
+            <!-- ============================================================= -->
+            <main class="htf-center-panel">
+                <!-- Track Headers with Solo, Mute & VU -->
+                <div class="matrix-header-row">
+                    <div class="col-step">
+                        <span>STEP</span>
+                        <button class="btn-step-clear" id="btn-clear-pat" title="Aktuelles Pattern leeren">CLEAR</button>
+                    </div>
+
+                    <!-- Track 1 Header -->
+                    <div class="col-track-head track-1">
+                        <div class="th-top">
+                            <span class="th-name">TRACK 1: LEAD SOLO</span>
+                            <div class="th-controls">
+                                <button class="btn-sm-mute" id="btn-mute-1" title="Track 1 stummschalten (F9)">M</button>
+                                <button class="btn-sm-solo" id="btn-solo-1" title="Track 1 solo hören (Ctrl+1)">S</button>
+                            </div>
+                        </div>
+                        <div class="th-mid">
+                            <span class="th-sub">$D400-$D406 • [ NOTE | DUR | INST | WAVE | FX ]</span>
+                            <div class="vu-meter"><div class="vu-fill" id="vu-fill-1"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Track 2 Header -->
+                    <div class="col-track-head track-2">
+                        <div class="th-top">
+                            <span class="th-name">TRACK 2: ARPEGGIO CHORD</span>
+                            <div class="th-controls">
+                                <button class="btn-sm-mute" id="btn-mute-2" title="Track 2 stummschalten (F10)">M</button>
+                                <button class="btn-sm-solo" id="btn-solo-2" title="Track 2 solo hören (Ctrl+2)">S</button>
+                            </div>
+                        </div>
+                        <div class="th-mid">
+                            <span class="th-sub">$D407-$D40D • [ NOTE | DUR | INST | WAVE | FX ]</span>
+                            <div class="vu-meter"><div class="vu-fill" id="vu-fill-2"></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Track 3 Header -->
+                    <div class="col-track-head track-3">
+                        <div class="th-top">
+                            <span class="th-name">TRACK 3: BASS & DRUMS</span>
+                            <div class="th-controls">
+                                <button class="btn-sm-mute" id="btn-mute-3" title="Track 3 stummschalten (F11)">M</button>
+                                <button class="btn-sm-solo" id="btn-solo-3" title="Track 3 solo hören (Ctrl+3)">S</button>
+                            </div>
+                        </div>
+                        <div class="th-mid">
+                            <span class="th-sub">$D40E-$D414 • [ NOTE | DUR | INST | WAVE | FX ]</span>
+                            <div class="vu-meter"><div class="vu-fill" id="vu-fill-3"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scrollable HTF Matrix Grid -->
+                <div class="matrix-scroll-pane" id="matrix-scroll-pane">
+                    <div class="matrix-grid-table" id="htf-grid-table">
+                        <!-- Populated by JS: 64 Rows with 5 sub-fields per track -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- ============================================================= -->
+            <!-- 4.3 RIGHT: 6502 DISASSEMBLER & 25-REGISTER HARDWARE MONITOR   -->
+            <!-- ============================================================= -->
+            <aside class="htf-right-panel">
+                <div class="panel-section disasm-section">
+                    <div class="sec-header">
+                        <span>💾 6502 BYTECODE DISASSEMBLER</span>
+                        <button class="btn-xs" id="btn-copy-asm" title="Assembler-Code in die Zwischenablage kopieren">COPY ASM</button>
+                    </div>
+                    <div class="disasm-code-view" id="htf-disasm-view">
+                        <!-- Live 6502 Assembly Code rendered dynamically -->
+                    </div>
+                </div>
+
+                <!-- 25 Register Hardware Telemetry Grid -->
+                <div class="panel-section reg-section">
+                    <div class="sec-header">
+                        <span>📊 MOS 6581 REGISTER ($D400-$D418)</span>
+                        <span class="reg-tag">25 CHIP-REGISTER</span>
+                    </div>
+                    <div class="htf-reg-grid" id="htf-reg-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 5. BOTTOM MASTER FILTER, SCOPE & STATS BAR                        -->
+        <!-- ================================================================= -->
+        <footer class="htf-footer">
+            <div class="footer-scope">
+                <canvas id="htf-scope-canvas" width="220" height="34"></canvas>
+            </div>
+
+            <!-- Master 6581 Filter & Saturation -->
+            <div class="footer-filter">
+                <span class="flt-label">MOS 6581 MASTER FILTER:</span>
+                <select id="htf-flt-mode" class="custom-select-xs">
+                    <option value="0x2F" selected>12dB Bandpass ($2F)</option>
+                    <option value="0x1F">12dB Lowpass ($1F)</option>
+                    <option value="0x4F">12dB Highpass ($4F)</option>
+                    <option value="0x3F">Notch Filter ($3F)</option>
+                    <option value="0x0F">Bypass</option>
+                </select>
+                <div class="flt-param">
+                    <label>CUTOFF:</label>
+                    <input type="range" id="htf-flt-cutoff" min="0" max="2047" value="1024">
+                </div>
+                <div class="flt-param">
+                    <label>RES (Q):</label>
+                    <input type="range" id="htf-flt-res" min="0" max="15" value="14">
+                </div>
+                <div class="flt-param">
+                    <label>DRIVE:</label>
+                    <input type="range" id="htf-master-drive" min="0" max="10" value="3" title="Analoge 6581 Nichtlinearität / Sättigung">
+                </div>
+                <div class="flt-param">
+                    <label>VOL:</label>
+                    <input type="range" id="htf-master-vol" min="0" max="100" value="85" title="Master Lautstärke">
+                </div>
+            </div>
+
+            <div class="footer-stats">
+                <span class="stat-badge" id="htf-stat-step">STEP: 00 / 63</span>
+                <span class="stat-badge" id="htf-stat-frames">FRAME: 0000</span>
+                <span class="stat-badge live" id="htf-stat-clock">50.0 Hz PAL</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 6. KEYBOARD SHORTCUTS & HELP MODAL                                    -->
+    <!-- ===================================================================== -->
+    <div class="htf-modal-overlay" id="help-modal" style="display: none;">
+        <div class="htf-modal-content">
+            <div class="modal-header">
+                <h2>🎹 HTF STUDIO PRO • TASTENKÜRZEL & WORKFLOW-GUIDE</h2>
+                <button class="btn-close-modal" id="btn-close-help">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-grid">
+                    <div class="help-col">
+                        <h3>🎼 NOTENEINGABE & NAVIGATION</h3>
+                        <ul>
+                            <li><kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> ... : Noten spielen & eingeben</li>
+                            <li><kbd>1</kbd> oder <kbd>Caps</kbd> : Note-Off (===) eingeben</li>
+                            <li><kbd>Del</kbd> / <kbd>Backspace</kbd> : Feld leeren (...)</li>
+                            <li><kbd>↑</kbd> <kbd>↓</kbd> : Zeile hoch / runter</li>
+                            <li><kbd>←</kbd> <kbd>→</kbd> : Spur wechseln (Track 1 / 2 / 3)</li>
+                            <li><kbd>Space</kbd> : Start / Stop (Song)</li>
+                            <li><kbd>Esc</kbd> : Stop</li>
+                        </div>
+                    <div class="help-col">
+                        <h3>🎛️ SPUR- & PROJEKT-STEUERUNG</h3>
+                        <ul>
+                            <li><kbd>F9</kbd> : Track 1 Mute / Unmute</li>
+                            <li><kbd>F10</kbd> : Track 2 Mute / Unmute</li>
+                            <li><kbd>F11</kbd> : Track 3 Mute / Unmute</li>
+                            <li><kbd>F12</kbd> : Alle Spuren aktivieren</li>
+                            <li><kbd>Ctrl + Z</kbd> : Rückgängig (Undo)</li>
+                            <li><kbd>Ctrl + Y</kbd> : Wiederherstellen (Redo)</li>
+                            <li><kbd>Ctrl + C / V</kbd> : Spur kopieren / einfügen</li>
+                            <li><kbd>F1</kbd> : Diese Hilfe öffnen / schließen</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTF Engine Script -->
+    <script src="tracker2.js"></script>
+</body>
+</html>
