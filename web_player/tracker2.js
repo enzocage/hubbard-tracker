@@ -1281,9 +1281,128 @@
     }
 
     // =========================================================================
-    // 10. EVENT LISTENERS & INITIALIZATION
+    // 10. EVENT LISTENERS, RESIZABLE SPLITTERS & INITIALIZATION
     // =========================================================================
+    function initResizablePanels() {
+        const leftPanel = document.getElementById("htf-left-panel");
+        const rightPanel = document.getElementById("htf-right-panel");
+        const resizerLeft = document.getElementById("resizer-left");
+        const resizerRight = document.getElementById("resizer-right");
+        const btnCollapseLeft = document.getElementById("btn-collapse-left");
+        const btnCollapseRight = document.getElementById("btn-collapse-right");
+        const respTabs = document.querySelectorAll(".resp-tab");
+
+        // Drag Resizer Left
+        if (resizerLeft && leftPanel) {
+            let isDragging = false;
+            let startX = 0;
+            let startW = 0;
+
+            resizerLeft.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startW = leftPanel.offsetWidth;
+                resizerLeft.classList.add("dragging");
+                document.body.style.cursor = "col-resize";
+                document.body.style.userSelect = "none";
+            });
+
+            // Double click to collapse/expand
+            resizerLeft.addEventListener("dblclick", () => {
+                leftPanel.classList.toggle("collapsed");
+                if (btnCollapseLeft) btnCollapseLeft.textContent = leftPanel.classList.contains("collapsed") ? "▶" : "◀";
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const newW = Math.max(160, Math.min(650, startW + dx));
+                leftPanel.style.width = `${newW}px`;
+                leftPanel.classList.remove("collapsed");
+                if (btnCollapseLeft) btnCollapseLeft.textContent = "◀";
+            });
+
+            window.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    resizerLeft.classList.remove("dragging");
+                    document.body.style.cursor = "";
+                    document.body.style.userSelect = "";
+                }
+            });
+        }
+
+        // Drag Resizer Right
+        if (resizerRight && rightPanel) {
+            let isDragging = false;
+            let startX = 0;
+            let startW = 0;
+
+            resizerRight.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                startX = e.clientX;
+                startW = rightPanel.offsetWidth;
+                resizerRight.classList.add("dragging");
+                document.body.style.cursor = "col-resize";
+                document.body.style.userSelect = "none";
+            });
+
+            // Double click to collapse/expand
+            resizerRight.addEventListener("dblclick", () => {
+                rightPanel.classList.toggle("collapsed");
+                if (btnCollapseRight) btnCollapseRight.textContent = rightPanel.classList.contains("collapsed") ? "◀" : "▶";
+            });
+
+            window.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+                const dx = startX - e.clientX;
+                const newW = Math.max(160, Math.min(650, startW + dx));
+                rightPanel.style.width = `${newW}px`;
+                rightPanel.classList.remove("collapsed");
+                if (btnCollapseRight) btnCollapseRight.textContent = "▶";
+            });
+
+            window.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                    resizerRight.classList.remove("dragging");
+                    document.body.style.cursor = "";
+                    document.body.style.userSelect = "";
+                }
+            });
+        }
+
+        // Collapse Buttons
+        if (btnCollapseLeft && leftPanel) {
+            btnCollapseLeft.addEventListener("click", () => {
+                leftPanel.classList.toggle("collapsed");
+                btnCollapseLeft.textContent = leftPanel.classList.contains("collapsed") ? "▶" : "◀";
+            });
+        }
+
+        if (btnCollapseRight && rightPanel) {
+            btnCollapseRight.addEventListener("click", () => {
+                rightPanel.classList.toggle("collapsed");
+                btnCollapseRight.textContent = rightPanel.classList.contains("collapsed") ? "◀" : "▶";
+            });
+        }
+
+        // Responsive Tabs for mobile/tablet screens
+        respTabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                respTabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                const view = tab.dataset.view;
+                document.body.classList.remove("view-tracker", "view-instruments", "view-disasm");
+                if (view !== "all") {
+                    document.body.classList.add(`view-${view}`);
+                }
+            });
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
+        initResizablePanels();
         renderPianoKeyboard();
         renderInstrumentList();
         renderOrderList();

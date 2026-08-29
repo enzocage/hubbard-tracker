@@ -216,15 +216,27 @@
             </div>
         </section>
 
+        <!-- Responsive View Mode Switcher (Visible on Tablets / Mobile Screens) -->
+        <div class="htf-responsive-tabs" id="htf-resp-tabs">
+            <button class="resp-tab active" data-view="all">🖥️ VOLLBILD-STUDIO</button>
+            <button class="resp-tab" data-view="tracker">🎼 TRACKER-MATRIX</button>
+            <button class="resp-tab" data-view="instruments">🎹 INSTRUMENTE & SOUND LAB</button>
+            <button class="resp-tab" data-view="disasm">💾 6502 & REGISTER</button>
+        </div>
+
         <!-- ================================================================= -->
-        <!-- 4. MAIN 3-COLUMN WORKBENCH                                         -->
+        <!-- 4. MAIN 3-COLUMN WORKBENCH (RESIZABLE & RESPONSIVE)               -->
         <!-- ================================================================= -->
-        <div class="htf-main-grid">
+        <div class="htf-main-grid" id="htf-main-grid">
 
             <!-- ============================================================= -->
             <!-- 4.1 LEFT: INSTRUMENT LAB, PRESETS, ADSR GRAPH & KEYBOARD      -->
             <!-- ============================================================= -->
-            <aside class="htf-left-panel">
+            <aside class="htf-left-panel" id="htf-left-panel">
+                <div class="panel-collapse-bar">
+                    <span class="panel-title-tag">🎹 INSTRUMENTE & SOUND LAB</span>
+                    <button class="btn-collapse" id="btn-collapse-left" title="Instrument-Panel ein/ausklappen (Doppelklick auf Splitter)">◀</button>
+                </div>
                 <!-- Instrument List & Presets -->
                 <div class="panel-section inst-section">
                     <div class="sec-header">
@@ -371,10 +383,15 @@
                 </div>
             </aside>
 
+            <!-- Draggable Vertical Splitter Left/Center -->
+            <div class="htf-resizer-h" id="resizer-left" title="Ziehen zum Vergrößern/Verkleinern (Doppelklick zum Ein/Ausklappen)">
+                <div class="resizer-grip"></div>
+            </div>
+
             <!-- ============================================================= -->
             <!-- 4.2 CENTER: 3-TRACK HTF MATRIX WITH SOLO / MUTE & VU METERS    -->
             <!-- ============================================================= -->
-            <main class="htf-center-panel">
+            <main class="htf-center-panel" id="htf-center-panel">
                 <!-- Track Headers with Solo, Mute & VU -->
                 <div class="matrix-header-row">
                     <div class="col-step">
@@ -436,10 +453,19 @@
                 </div>
             </main>
 
+            <!-- Draggable Vertical Splitter Center/Right -->
+            <div class="htf-resizer-h" id="resizer-right" title="Ziehen zum Vergrößern/Verkleinern (Doppelklick zum Ein/Ausklappen)">
+                <div class="resizer-grip"></div>
+            </div>
+
             <!-- ============================================================= -->
             <!-- 4.3 RIGHT: 6502 DISASSEMBLER & 25-REGISTER HARDWARE MONITOR   -->
             <!-- ============================================================= -->
-            <aside class="htf-right-panel">
+            <aside class="htf-right-panel" id="htf-right-panel">
+                <div class="panel-collapse-bar">
+                    <span class="panel-title-tag">💾 6502 & TELEMETRIE</span>
+                    <button class="btn-collapse" id="btn-collapse-right" title="Telemetrie-Panel ein/ausklappen (Doppelklick auf Splitter)">▶</button>
+                </div>
                 <div class="panel-section disasm-section">
                     <div class="sec-header">
                         <span>💾 6502 BYTECODE DISASSEMBLER</span>
@@ -462,6 +488,11 @@
                 </div>
             </aside>
 
+        </div>
+
+        <!-- Draggable Horizontal Splitter Main/Footer -->
+        <div class="htf-resizer-v" id="resizer-bottom" title="Ziehen zum Vergrößern des unteren Master-Bereichs">
+            <div class="resizer-grip-v"></div>
         </div>
 
         <!-- ================================================================= -->
@@ -550,6 +581,6 @@
     </div>
 
     <!-- HTF Engine Script -->
-    <script src="tracker2.js?v=2.0.3"></script>
+    <script src="tracker2.js?v=2.0.4"></script>
 </body>
 </html>

@@ -758,20 +758,146 @@ body.htf-body {
 
 .btn-exp:hover { color: #000; filter: brightness(1.2); }
 
+/* Responsive Mode Switcher */
+.htf-responsive-tabs {
+    display: none;
+    gap: 4px;
+    background: var(--bg-header);
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+}
+
+.resp-tab {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 4px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.resp-tab:hover {
+    border-color: var(--trk1-cyan);
+    color: #fff;
+}
+
+.resp-tab.active {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(37, 99, 235, 0.35));
+    border-color: var(--trk1-cyan);
+    color: #fff;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+/* Panel Collapse Bar */
+.panel-collapse-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 2px 6px;
+    user-select: none;
+}
+
+.panel-title-tag {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 900;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+}
+
+.btn-collapse {
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    font-size: 0.58rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-collapse:hover {
+    background: var(--trk1-cyan);
+    color: #000;
+    border-color: var(--trk1-cyan);
+}
+
+/* Draggable Splitters */
+.htf-resizer-h {
+    width: 6px;
+    background: transparent;
+    cursor: col-resize;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, box-shadow 0.15s;
+    user-select: none;
+    z-index: 20;
+    flex-shrink: 0;
+}
+
+.htf-resizer-h:hover, .htf-resizer-h.dragging {
+    background: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+}
+
+.resizer-grip {
+    width: 2px;
+    height: 32px;
+    background: var(--border-accent);
+    border-radius: 1px;
+}
+
+.htf-resizer-v {
+    height: 6px;
+    background: transparent;
+    cursor: row-resize;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, box-shadow 0.15s;
+    user-select: none;
+    z-index: 20;
+    flex-shrink: 0;
+    margin: -1px 0;
+}
+
+.htf-resizer-v:hover, .htf-resizer-v.dragging {
+    background: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.8);
+}
+
+.resizer-grip-v {
+    height: 2px;
+    width: 44px;
+    background: var(--border-accent);
+    border-radius: 1px;
+}
+
 /* ==============================================================================
-   4. MAIN 3-COLUMN WORKBENCH
+   4. MAIN 3-COLUMN WORKBENCH (FLEXIBLE RESIZABLE ARCHITECTURE)
    ============================================================================== */
 
 .htf-main-grid {
-    display: grid;
-    grid-template-columns: 280px 1fr 280px;
-    gap: 6px;
+    display: flex;
+    flex-direction: row;
     flex: 1;
+    min-height: 0;
+    gap: 0;
     overflow: hidden;
-}
-
-@media (max-width: 1250px) {
-    .htf-main-grid { grid-template-columns: 250px 1fr 250px; }
+    position: relative;
 }
 
 .panel-section {
@@ -810,10 +936,58 @@ body.htf-body {
 
 /* 4.1 Left Column: Instruments & Lab */
 .htf-left-panel {
+    width: 290px;
+    min-width: 180px;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     gap: 5px;
     overflow: hidden;
+    flex-shrink: 0;
+    transition: width 0.05s ease-out;
+}
+
+.htf-left-panel.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.htf-center-panel {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-medium);
+    border-radius: 6px;
+}
+
+.htf-right-panel {
+    width: 290px;
+    min-width: 180px;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: width 0.05s ease-out;
+}
+
+.htf-right-panel.collapsed {
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .inst-section { height: 130px; }
@@ -1539,4 +1713,129 @@ kbd {
     padding: 1px 5px;
     border-radius: 3px;
     font-weight: 900;
+}
+
+/* ==============================================================================
+   7. COMPREHENSIVE RESPONSIVE & ADAPTIVE LAYOUT
+   ============================================================================== */
+
+/* Sticky Step Numbers during horizontal scrolling */
+.col-step, .htf-step-cell {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: var(--bg-panel);
+}
+
+.matrix-header-row {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #1e293b;
+}
+
+/* 1200px Breakpoint (Laptops & Small Desktops) */
+@media (max-width: 1200px) {
+    .htf-left-panel { width: 250px; min-width: 160px; }
+    .htf-right-panel { width: 250px; min-width: 160px; }
+    .htf-transport-bar { gap: 4px; padding: 2px 5px; }
+    .params-group { gap: 4px; }
+    .param-box input, .param-box select { width: 48px; }
+}
+
+/* 980px Breakpoint (Tablets & Landscape Mobile) */
+@media (max-width: 980px) {
+    .htf-responsive-tabs {
+        display: flex;
+    }
+
+    body.view-tracker .htf-left-panel,
+    body.view-tracker .htf-right-panel,
+    body.view-tracker #resizer-left,
+    body.view-tracker #resizer-right {
+        display: none !important;
+    }
+
+    body.view-instruments .htf-center-panel,
+    body.view-instruments .htf-right-panel,
+    body.view-instruments #resizer-left,
+    body.view-instruments #resizer-right {
+        display: none !important;
+    }
+    body.view-instruments .htf-left-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    body.view-disasm .htf-left-panel,
+    body.view-disasm .htf-center-panel,
+    body.view-disasm #resizer-left,
+    body.view-disasm #resizer-right {
+        display: none !important;
+    }
+    body.view-disasm .htf-right-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .htf-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .footer-filter {
+        flex-wrap: wrap;
+    }
+
+    .matrix-scroll-pane {
+        overflow-x: auto;
+    }
+
+    .matrix-grid-table, .matrix-header-row {
+        min-width: 580px;
+    }
+}
+
+/* 680px Breakpoint (Mobile Phones) */
+@media (max-width: 680px) {
+    .htf-container {
+        padding: 2px;
+        gap: 3px;
+    }
+
+    .order-top-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .order-actions {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .htf-transport-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .transport-group, .params-group, .toolkit-group, .export-group {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .htf-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .footer-scope {
+        display: none;
+    }
 }
