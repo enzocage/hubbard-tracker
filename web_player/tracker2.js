@@ -175,6 +175,9 @@
         masterFilterNode.frequency.value = 1600;
         masterFilterNode.Q.value = 4.0;
 
+        masterWaveShaperNode = audioCtx.createWaveShaper();
+        masterWaveShaperNode.curve = makeDistortionCurve(3);
+
         analyserNode = audioCtx.createAnalyser();
         analyserNode.fftSize = 256;
 
@@ -186,11 +189,25 @@
         });
 
         masterGainNode.connect(masterFilterNode);
-        masterFilterNode.connect(analyserNode);
+        masterFilterNode.connect(masterWaveShaperNode);
+        masterWaveShaperNode.connect(analyserNode);
         analyserNode.connect(audioCtx.destination);
 
         startScope();
         initWebMIDI();
+    }
+
+    function makeDistortionCurve(amount) {
+        const k = amount * 12;
+        const n_samples = 44100;
+        const curve = new Float32Array(n_samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < n_samples; ++i) {
+            const x = (i * 2) / n_samples - 1;
+            if (k === 0) curve[i] = x;
+            else curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+        }
+        return curve;
     }
 
     function updateVoiceMuteSoloRouting() {
@@ -239,14 +256,6 @@
         return 440.0 * Math.pow(2.0, (midi - 69) / 12.0);
     }
 
-    // Direct Live Audition Synthesizer for Playing Keyboard
-    function playLiveSound(noteStr, inst) {
-        initAudio();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-        const freq = noteToHz(noteStr);
-        if (freq <= 0) return;
-
-        const now = audioCtx.currentTime;
     function noteToMidi(noteStr) {
         if (!noteStr || noteStr === "..." || noteStr === "===" || noteStr.length < 3) return 60;
         const name = noteStr.slice(0, -1);
@@ -827,6 +836,15 @@
         }
 
         currentAudioSource.connect(masterGainNode);
+        
+        // Apply current BPM and Clock speed
+        const baseBpm = 125.0;
+        const curBpm = parseInt(document.getElementById("inp-bpm").value) || 125;
+        htfState.bpm = curBpm;
+        const clockMult = (htfState.clock === "ntsc") ? (60.0 / 50.0) : 1.0;
+        const speedRate = (curBpm / baseBpm) * clockMult;
+        currentAudioSource.playbackRate.value = Math.max(0.2, Math.min(4.0, speedRate));
+
         playbackStartTime = audioCtx.currentTime;
         playbackStartOffset = offsetSec;
 
@@ -836,7 +854,8 @@
         function syncPlayhead() {
             if (!htfState.isPlaying) return;
 
-            const elapsedSec = audioCtx.currentTime - playbackStartTime;
+            const curRate = (currentAudioSource && currentAudioSource.playbackRate) ? currentAudioSource.playbackRate.value : 1.0;
+            const elapsedSec = (audioCtx.currentTime - playbackStartTime) * curRate;
             let currentTotalSec = playbackStartOffset + elapsedSec;
 
             if (!isSongMode) {
@@ -1307,13 +1326,102 @@
         // MIDI Export
         document.getElementById("btn-export-midi").addEventListener("click", exportStandardMIDI);
 
-        // Sound Lab Sliders
+        // =====================================================================
+        // UNMITTELBARE AKUSTISCHE AUSWIRKUNG BEI JEDER PARAMETER-ÄNDERUNG
+        // =====================================================================
+
+        function updatePlaybackSpeedRealtime() {
+            const baseBpm = 125.0;
+            const curBpm = parseInt(document.getElementById("inp-bpm").value) || 125;
+            htfState.bpm = curBpm;
+            const clockMult = (htfState.clock === "ntsc") ? (60.0 / 50.0) : 1.0;
+            const rate = (curBpm / baseBpm) * clockMult;
+
+            if (currentAudioSource && currentAudioSource.playbackRate && audioCtx) {
+                currentAudioSource.playbackRate.setTargetAtTime(Math.max(0.2, Math.min(4.0, rate)), audioCtx.currentTime, 0.02);
+            }
+        }
+
+        // BPM & Tempo: Unmittelbare Geschwindigkeits- & Tonhöhenänderung in Echtzeit
+        document.getElementById("inp-bpm").addEventListener("input", updatePlaybackSpeedRealtime);
+
+        // Speed (Frames pro Zeile)
+        document.getElementById("inp-speed").addEventListener("input", (e) => {
+            const sp = parseInt(e.target.value) || 6;
+            htfState.speed = sp;
+            isPatternModified = true;
+            scheduleBackgroundAudioUpdate();
+            updatePlaybackSpeedRealtime();
+        });
+
+        // Clock (50Hz PAL vs 60Hz NTSC)
+        document.getElementById("sel-clock").addEventListener("change", (e) => {
+            htfState.clock = e.target.value;
+            const isNtsc = e.target.value === "ntsc";
+            document.getElementById("htf-stat-clock").textContent = isNtsc ? "60.0 Hz NTSC" : "50.0 Hz PAL";
+            updatePlaybackSpeedRealtime();
+        });
+
+        // Master 6581 Filter Cutoff
+        document.getElementById("htf-flt-cutoff").addEventListener("input", (e) => {
+            initAudio();
+            const raw = parseInt(e.target.value) || 1024;
+            const hz = Math.round(30 * Math.pow(400, raw / 2047));
+            if (masterFilterNode && audioCtx) {
+                masterFilterNode.frequency.setTargetAtTime(hz, audioCtx.currentTime, 0.01);
+            }
+        });
+
+        // Master 6581 Filter Resonance (Q)
+        document.getElementById("htf-flt-res").addEventListener("input", (e) => {
+            initAudio();
+            const resRaw = parseInt(e.target.value) || 0;
+            const qVal = 0.5 + (resRaw / 15.0) * 17.5;
+            if (masterFilterNode && audioCtx) {
+                masterFilterNode.Q.setTargetAtTime(qVal, audioCtx.currentTime, 0.01);
+            }
+        });
+
+        // Master 6581 Filter Mode
+        document.getElementById("htf-flt-mode").addEventListener("change", (e) => {
+            initAudio();
+            const m = e.target.value;
+            if (masterFilterNode) {
+                if (m === "0x2F") masterFilterNode.type = "bandpass";
+                else if (m === "0x1F") masterFilterNode.type = "lowpass";
+                else if (m === "0x4F") masterFilterNode.type = "highpass";
+                else if (m === "0x3F") masterFilterNode.type = "notch";
+                else if (m === "0x0F") masterFilterNode.type = "allpass";
+            }
+        });
+
+        // Master Saturation / Drive
+        document.getElementById("htf-master-drive").addEventListener("input", (e) => {
+            initAudio();
+            const drv = parseInt(e.target.value) || 0;
+            if (masterWaveShaperNode) {
+                masterWaveShaperNode.curve = makeDistortionCurve(drv);
+            }
+        });
+
+        // Master Volume
+        document.getElementById("htf-master-vol").addEventListener("input", (e) => {
+            initAudio();
+            const vol = (parseInt(e.target.value) || 85) / 100.0;
+            if (masterGainNode && audioCtx) {
+                masterGainNode.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.01);
+            }
+        });
+
+        // Sound Lab Sliders (Pulse Width & ADSR): Sofortige Synthese-Aktualisierung
         document.getElementById("htf-pw").addEventListener("input", (e) => {
             const v = parseInt(e.target.value);
             const inst = htfState.instruments.find(i => i.id === htfState.activeInstId);
             if (inst) inst.pw = v;
             document.getElementById("lbl-htf-pw").textContent = `${v} (${Math.round((v / 4095) * 100)}%)`;
             document.getElementById("pw-duty-fill").style.width = `${(v / 4095) * 100}%`;
+            isPatternModified = true;
+            scheduleBackgroundAudioUpdate();
         });
 
         ["att", "dec", "sus", "rel"].forEach(param => {
@@ -1324,6 +1432,8 @@
                 if (inst) inst[keyMap[param]] = v;
                 document.getElementById(`lbl-htf-${param}`).textContent = v;
                 drawADSRCurve();
+                isPatternModified = true;
+                scheduleBackgroundAudioUpdate();
             });
         });
 
@@ -1333,6 +1443,8 @@
                 const inst = htfState.instruments.find(i => i.id === htfState.activeInstId);
                 if (inst) inst.wave = w;
                 selectInstrument(inst.id);
+                isPatternModified = true;
+                scheduleBackgroundAudioUpdate();
             });
         });
 
