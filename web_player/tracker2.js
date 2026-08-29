@@ -153,6 +153,7 @@
     let audioCtx = null;
     let masterGainNode = null;
     let masterFilterNode = null;
+    let masterWaveShaperNode = null;
     let analyserNode = null;
     let voiceGainNodes = { 1: null, 2: null, 3: null };
     let currentAudioSource = null;
