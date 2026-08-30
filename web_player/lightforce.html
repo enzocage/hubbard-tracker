@@ -196,7 +196,13 @@
                     <div class="hud-left">
                         <span class="layer-badge l2">EBENE 2</span>
                         <span class="motif-id-badge" id="active-motif-badge">L01</span>
-                        <span class="motif-name-text" id="active-motif-name">HEROIC DORIAN LEAD HOOK (64 STEPS)</span>
+                        <span class="motif-name-text" id="active-motif-name">HEROIC DORIAN LEAD HOOK</span>
+                    </div>
+
+                    <!-- Notation View Toggle -->
+                    <div class="lf-btn-group view-mode-toggle">
+                        <button class="lf-tool-btn view-btn active" id="btn-view-events" title="Musikalische Impuls- & Anschlags-Notation (Notendauer & Klangkörper als Einheit)">⚡ IMPULS- & ANSCHLAGS-NOTATION</button>
+                        <button class="lf-tool-btn view-btn" id="btn-view-grid" title="Klassische 64-Schritt Matrix">▦ 64-STEP GRID</button>
                     </div>
 
                     <!-- Transformation & Pitch Editing Toolkit -->
@@ -229,9 +235,15 @@
                     </div>
                 </div>
 
-                <!-- 64-Step Matrix Table for Active Motif -->
+                <!-- Event-Driven Strike Notation & 64-Step Matrix Table for Active Motif -->
                 <div class="matrix-scroll-pane" id="matrix-scroll-pane">
-                    <div class="matrix-table" id="matrix-grid-table">
+                    <!-- 1. Event-Driven Musical Strike Sequence (Default) -->
+                    <div class="matrix-events-container" id="matrix-events-container">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- 2. 64-Step Tracker Grid Table (Alternative View) -->
+                    <div class="matrix-table" id="matrix-grid-table" style="display: none;">
                         <!-- Populated by JS: Step, Note, Duration, Instrument, Waveform, FX Macro -->
                     </div>
                 </div>

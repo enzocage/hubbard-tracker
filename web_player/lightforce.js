@@ -116,8 +116,10 @@
             // EBENE 2: Active Motif & Step Cursor
             this.activeMotifId = "L01";
             this.activeStep = 0;
+            this.activeEventIdx = 0;
             this.activeOctave = 4;
             this.editMode = true;
+            this.viewMode = "events"; // 'events' (default) or 'grid'
 
             // EBENE 1: MOS 6581 Sound Sculptor Instrument Patch
             this.activeInstrument = JSON.parse(JSON.stringify(LIGHTFORCE_PRESETS["01_dorian_lead"]));
@@ -166,11 +168,14 @@
                         const motifId = `${prefix}${String(count).padStart(2, '0')}`;
                         const motifName = (t === 1) ? `Lead Hook ${count}` : ((t === 2) ? `m11 Arp Pattern ${count}` : `Slap Bass Riff ${count}`);
 
+                        const rawEvents = (data.pattern_events && data.pattern_events[pIdx] && data.pattern_events[pIdx][t]) ? data.pattern_events[pIdx][t] : [];
+
                         this.motifs[motifId] = {
                             id: motifId,
                             track: t,
                             name: motifName,
                             steps: steps,
+                            events: JSON.parse(JSON.stringify(rawEvents)),
                             instId: t
                         };
                         trackMotifMap[sig] = motifId;
@@ -876,7 +881,240 @@
         });
     }
 
-    // Render Ebene 2: Decompressed Note Matrix
+    // Render Ebene 2: Event-Driven Musical Strike & Pulse Sequence
+    function renderEventNotation() {
+        const motif = model.motifs[model.activeMotifId];
+        if (!motif) return;
+
+        const container = document.getElementById("matrix-events-container");
+        if (!container) return;
+        container.innerHTML = "";
+
+        // If motif doesn't have events extracted yet, build them dynamically from steps
+        if (!motif.events || !motif.events.length) {
+            motif.events = buildEventsFromSteps(motif.steps, motif.track);
+        }
+
+        motif.events.forEach((ev, evIdx) => {
+            const card = document.createElement("div");
+            const isRest = (ev.note === "..." || ev.note === "===");
+            card.className = `strike-event-card lane-${motif.track} ${evIdx === model.activeEventIdx ? "active" : ""}`;
+            card.id = `ev-card-${evIdx}`;
+            card.dataset.startFrame = ev.start_frame;
+            card.dataset.durFrames = ev.dur_frames;
+
+            const durWidthPercent = Math.min(100, Math.max(8, (ev.dur_frames / 48) * 100));
+
+            card.innerHTML = `
+                <div class="sec-head">
+                    <div class="sec-left">
+                        <span class="sec-badge">#${String(ev.event_idx || evIdx + 1).padStart(2, '0')}</span>
+                        <span class="sec-bar">Takt ${ev.bar_pos || '1.1.1'}</span>
+                        <span class="sec-time">${(ev.start_sec !== undefined ? ev.start_sec : (ev.start_frame * 0.02)).toFixed(2)}s (Frame ${String(ev.start_frame).padStart(3, '0')})</span>
+                    </div>
+                    <div class="sec-right">
+                        <span class="sec-dur-tag">${ev.dur_label || '1/16'} • ${ev.dur_frames}F (${ev.dur_ms || ev.dur_frames * 20}ms)</span>
+                    </div>
+                </div>
+
+                <div class="sec-main">
+                    <div class="sec-pitch-box ${isRest ? 'rest' : ''}">
+                        <span class="sec-pitch">${ev.note}</span>
+                    </div>
+
+                    <div class="sec-body">
+                        <div class="sec-inst-row">
+                            <span class="sec-inst-name">${ev.inst_name || 'Instrument'}</span>
+                            <span class="sec-wave-badge">${ev.wave || '$41'}</span>
+                        </div>
+
+                        <!-- Visual Note Duration & Sustain Flow Bar -->
+                        <div class="sec-dur-bar-track" title="Klingende Dauer des Instruments: ${ev.dur_frames} Frames">
+                            <div class="sec-dur-bar-fill" style="width: ${durWidthPercent}%;"></div>
+                        </div>
+
+                        <!-- Dynamic Sound Flow during the Note -->
+                        <div class="sec-macro-flow">
+                            <span class="macro-chip attack" title="Anschlag & Einschwing-Impuls">${ev.attack_fx || '⚡ Anschlag'}</span>
+                            <span class="macro-arrow">➔</span>
+                            <span class="macro-chip sustain" title="Körper-Modulation & Ausklang">${ev.evolution || '🌊 Sustain'}</span>
+                        </div>
+                    </div>
+
+                    <!-- Direct WYSIWYG Actions on this Event -->
+                    <div class="sec-actions">
+                        <button class="btn-sec-play" title="Diesen Anschlag isoliert anhören">▶</button>
+                        <div class="sec-btn-col">
+                            <button class="sec-btn btn-ev-up" title="Halbton höher (+1)">▲</button>
+                            <button class="sec-btn btn-ev-dn" title="Halbton tiefer (-1)">▼</button>
+                        </div>
+                        <div class="sec-btn-col">
+                            <button class="sec-btn btn-ev-len-up" title="Note verlängern (+6 Frames)">⏱+</button>
+                            <button class="sec-btn btn-ev-len-dn" title="Note verkürzen (-6 Frames)">⏱-</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Card Click: Audition & Select
+            card.addEventListener("click", (e) => {
+                if (e.target.closest("button")) return;
+                model.activeEventIdx = evIdx;
+                model.activeStep = Math.floor(ev.start_frame / 6);
+                document.querySelectorAll(".strike-event-card").forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                audio.auditionStepSlice(motif.track, Math.floor(ev.start_frame / 6), ev.dur_frames, ev._edited, ev.note);
+            });
+
+            // Play Button
+            const btnPlay = card.querySelector(".btn-sec-play");
+            btnPlay.addEventListener("click", (e) => {
+                e.stopPropagation();
+                model.activeEventIdx = evIdx;
+                document.querySelectorAll(".strike-event-card").forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                audio.auditionStepSlice(motif.track, Math.floor(ev.start_frame / 6), ev.dur_frames, ev._edited, ev.note);
+            });
+
+            // Transpose Up
+            const btnUp = card.querySelector(".btn-ev-up");
+            btnUp.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (ev.note !== "..." && ev.note !== "===") {
+                    model.saveUndo();
+                    const midi = MIDI_NOTE_MAP[ev.note] ? MIDI_NOTE_MAP[ev.note].midi : 62;
+                    const nextMidi = Math.min(108, midi + 1);
+                    const nObj = FREQ_NOTE_MAP[nextMidi];
+                    if (nObj) {
+                        ev.note = nObj.name;
+                        ev._edited = true;
+                        const sIdx = Math.floor(ev.start_frame / 6);
+                        if (motif.steps[sIdx]) motif.steps[sIdx].note = ev.note;
+                        renderEventNotation();
+                        renderDecompressedMatrix();
+                        audio.playNoteLive(ev.note, model.activeInstrument);
+                    }
+                }
+            });
+
+            // Transpose Down
+            const btnDn = card.querySelector(".btn-ev-dn");
+            btnDn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (ev.note !== "..." && ev.note !== "===") {
+                    model.saveUndo();
+                    const midi = MIDI_NOTE_MAP[ev.note] ? MIDI_NOTE_MAP[ev.note].midi : 62;
+                    const nextMidi = Math.max(12, midi - 1);
+                    const nObj = FREQ_NOTE_MAP[nextMidi];
+                    if (nObj) {
+                        ev.note = nObj.name;
+                        ev._edited = true;
+                        const sIdx = Math.floor(ev.start_frame / 6);
+                        if (motif.steps[sIdx]) motif.steps[sIdx].note = ev.note;
+                        renderEventNotation();
+                        renderDecompressedMatrix();
+                        audio.playNoteLive(ev.note, model.activeInstrument);
+                    }
+                }
+            });
+
+            // Duration +6 Frames
+            const btnLenUp = card.querySelector(".btn-ev-len-up");
+            btnLenUp.addEventListener("click", (e) => {
+                e.stopPropagation();
+                model.saveUndo();
+                ev.dur_frames = Math.min(192, ev.dur_frames + 6);
+                ev.dur_ms = ev.dur_frames * 20;
+                ev.dur_label = ev.dur_frames <= 6 ? "1/16" : (ev.dur_frames <= 12 ? "1/8" : (ev.dur_frames <= 18 ? "1/8 Pkt" : (ev.dur_frames <= 24 ? "1/4" : (ev.dur_frames <= 48 ? "1/2" : "Ganze"))));
+                renderEventNotation();
+                audio.auditionStepSlice(motif.track, Math.floor(ev.start_frame / 6), ev.dur_frames, ev._edited, ev.note);
+            });
+
+            // Duration -6 Frames
+            const btnLenDn = card.querySelector(".btn-ev-len-dn");
+            btnLenDn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                model.saveUndo();
+                ev.dur_frames = Math.max(2, ev.dur_frames - 6);
+                ev.dur_ms = ev.dur_frames * 20;
+                ev.dur_label = ev.dur_frames <= 6 ? "1/16" : (ev.dur_frames <= 12 ? "1/8" : (ev.dur_frames <= 18 ? "1/8 Pkt" : (ev.dur_frames <= 24 ? "1/4" : (ev.dur_frames <= 48 ? "1/2" : "Ganze"))));
+                renderEventNotation();
+                audio.auditionStepSlice(motif.track, Math.floor(ev.start_frame / 6), ev.dur_frames, ev._edited, ev.note);
+            });
+
+            container.appendChild(card);
+        });
+    }
+
+    function buildEventsFromSteps(steps, track) {
+        const events = [];
+        let curNote = null;
+        let startStep = 0;
+        let curInst = "01";
+        let curWave = "$41";
+        let curFx = "...";
+
+        steps.forEach((s, sIdx) => {
+            if (s.note && s.note !== "..." && s.note !== "===") {
+                if (curNote !== null && curNote !== "...") {
+                    const durF = (sIdx - startStep) * 6;
+                    const startF = startStep * 6;
+                    const bar = 1 + Math.floor(startF / 96);
+                    const beat = 1 + Math.floor((startF % 96) / 24);
+                    const sixteenth = 1 + Math.floor((startF % 24) / 6);
+                    const durLabel = durF <= 6 ? "1/16" : (durF <= 12 ? "1/8" : (durF <= 18 ? "1/8 Pkt" : (durF <= 24 ? "1/4" : (durF <= 48 ? "1/2" : "Ganze"))));
+                    events.push({
+                        event_idx: events.length + 1,
+                        bar_pos: `${bar}.${beat}.${sixteenth}`,
+                        start_frame: startF,
+                        start_sec: +(startF * 0.02).toFixed(3),
+                        dur_frames: durF,
+                        dur_ms: durF * 20,
+                        dur_label: durLabel,
+                        note: curNote,
+                        inst_id: curInst,
+                        inst_name: track === 1 ? "Heroic Dorian Lead" : (track === 2 ? "Signature m11 Arpeggio" : "Driving 16th Slap Bass"),
+                        wave: curWave,
+                        attack_fx: track === 1 ? "🚀 Pitch-Scoop (-2 HT)" : (track === 2 ? "⚡ 50Hz Arp Trigger" : "💥 Slap-Pop (+12 HT)"),
+                        evolution: track === 1 ? "🌊 Dynamic PWM Modulation" : (track === 2 ? "🔄 6-Step m11 Loop" : "🎸 16tel Slap-Bass Run")
+                    });
+                }
+                curNote = s.note;
+                startStep = sIdx;
+                curInst = s.inst || "01";
+                curWave = s.wave || "$41";
+                curFx = s.fx || "...";
+            }
+        });
+
+        if (curNote !== null && curNote !== "...") {
+            const durF = (64 - startStep) * 6;
+            const startF = startStep * 6;
+            const bar = 1 + Math.floor(startF / 96);
+            const beat = 1 + Math.floor((startF % 96) / 24);
+            const sixteenth = 1 + Math.floor((startF % 24) / 6);
+            const durLabel = durF <= 6 ? "1/16" : (durF <= 12 ? "1/8" : (durF <= 18 ? "1/8 Pkt" : (durF <= 24 ? "1/4" : (durF <= 48 ? "1/2" : "Ganze"))));
+            events.push({
+                event_idx: events.length + 1,
+                bar_pos: `${bar}.${beat}.${sixteenth}`,
+                start_frame: startF,
+                start_sec: +(startF * 0.02).toFixed(3),
+                dur_frames: durF,
+                dur_ms: durF * 20,
+                dur_label: durLabel,
+                note: curNote,
+                inst_id: curInst,
+                inst_name: track === 1 ? "Heroic Dorian Lead" : (track === 2 ? "Signature m11 Arpeggio" : "Driving 16th Slap Bass"),
+                wave: curWave,
+                attack_fx: track === 1 ? "🚀 Pitch-Scoop (-2 HT)" : (track === 2 ? "⚡ 50Hz Arp Trigger" : "💥 Slap-Pop (+12 HT)"),
+                evolution: track === 1 ? "🌊 Dynamic PWM Modulation" : (track === 2 ? "🔄 6-Step m11 Loop" : "🎸 16tel Slap-Bass Run")
+            });
+        }
+
+        return events;
+    }
+
+    // Render Ebene 2: Main Switcher (Events vs 64-Grid)
     function renderDecompressedMatrix() {
         const motif = model.motifs[model.activeMotifId];
         if (!motif) return;
@@ -897,6 +1135,26 @@
 
         document.getElementById("active-motif-badge").textContent = motif.id;
         document.getElementById("active-motif-name").textContent = `${motif.name.toUpperCase()} (SPUR ${motif.track} • D-DORISCH)`;
+
+        const evContainer = document.getElementById("matrix-events-container");
+        const gridTable = document.getElementById("matrix-grid-table");
+
+        if (model.viewMode === "events") {
+            if (evContainer) evContainer.style.display = "flex";
+            if (gridTable) gridTable.style.display = "none";
+            renderEventNotation();
+        } else {
+            if (evContainer) evContainer.style.display = "none";
+            if (gridTable) gridTable.style.display = "flex";
+            render64StepGridTable();
+        }
+
+        updateSynthUI();
+    }
+
+    function render64StepGridTable() {
+        const motif = model.motifs[model.activeMotifId];
+        if (!motif) return;
 
         const table = document.getElementById("matrix-grid-table");
         if (!table) return;
@@ -940,8 +1198,6 @@
 
             table.appendChild(row);
         });
-
-        updateSynthUI();
     }
 
     // Render Ebene 1: MOS 6581 Synth Controls
@@ -1157,6 +1413,15 @@
             const r = document.getElementById(`m-row-${step}`);
             if (r) r.classList.add("playhead");
 
+            // Real-time Event Card Highlight
+            const relFrame = (frames % 384);
+            document.querySelectorAll(".strike-event-card").forEach(c => {
+                const startF = parseInt(c.dataset.startFrame) || 0;
+                const durF = parseInt(c.dataset.durFrames) || 6;
+                const isPlayingEvent = (relFrame >= startF && relFrame < startF + durF);
+                c.classList.toggle("playing", isPlayingEvent);
+            });
+
             document.getElementById("tele-step").textContent = `STEP: ${String(step).padStart(2, '0')} / 63`;
             document.getElementById("tele-frame").textContent = `FRAME: ${String(frames).padStart(4, '0')}`;
 
@@ -1170,6 +1435,32 @@
                 });
             });
         };
+
+        // View Mode Switcher (Events vs Grid)
+        const btnViewEv = document.getElementById("btn-view-events");
+        const btnViewGrid = document.getElementById("btn-view-grid");
+        const evContainer = document.getElementById("matrix-events-container");
+        const gridTable = document.getElementById("matrix-grid-table");
+
+        if (btnViewEv && btnViewGrid) {
+            btnViewEv.addEventListener("click", () => {
+                model.viewMode = "events";
+                btnViewEv.classList.add("active");
+                btnViewGrid.classList.remove("active");
+                if (evContainer) evContainer.style.display = "flex";
+                if (gridTable) gridTable.style.display = "none";
+                renderDecompressedMatrix();
+            });
+
+            btnViewGrid.addEventListener("click", () => {
+                model.viewMode = "grid";
+                btnViewGrid.classList.add("active");
+                btnViewEv.classList.remove("active");
+                if (evContainer) evContainer.style.display = "none";
+                if (gridTable) gridTable.style.display = "flex";
+                renderDecompressedMatrix();
+            });
+        }
 
         // Master Transport Listeners
         document.getElementById("btn-play-song").addEventListener("click", () => audio.startPlayback(false, model.activeSlotIdx));

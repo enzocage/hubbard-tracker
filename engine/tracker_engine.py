@@ -175,20 +175,27 @@ class HubbardTrackerDecompiler:
 
     def decompile_to_tracker(self, num_patterns=8, rows_per_pattern=64, frames_per_row=6):
         """
-        Decompiles captured 50Hz SID execution into Tracker patterns.
+        Decompiles captured 50Hz SID execution into Tracker patterns and Event-Driven Note Sequences.
         """
-        total_frames = num_patterns * rows_per_pattern * frames_per_row
+        frames_per_pattern = rows_per_pattern * frames_per_row
+        total_frames = num_patterns * frames_per_pattern
         frames = self.extractor.capture_frames(num_frames=total_frames)
 
         patterns = []
+        pattern_events = []
+
         for p in range(num_patterns):
             rows = []
+            pat_start_frame = p * frames_per_pattern
+            pat_end_frame = min(len(frames), pat_start_frame + frames_per_pattern)
+            pat_frames = frames[pat_start_frame:pat_end_frame]
+
+            # 1. Classic 64-Row Grid Matrix
             for r in range(rows_per_pattern):
-                f_idx = (p * rows_per_pattern + r) * frames_per_row
+                f_idx = pat_start_frame + r * frames_per_row
                 if f_idx >= len(frames):
                     break
-                frame_data = frames[f_idx]
-                st = frame_data["state"]
+                st = frames[f_idx]["state"]
 
                 # Voice 1
                 f1 = st[0] | (st[1] << 8)
@@ -225,6 +232,112 @@ class HubbardTrackerDecompiler:
                 })
             patterns.append(rows)
 
+            # 2. Event-Driven Musical Strike & Pulse Sequence (Anschlag- & Impuls-Einheiten)
+            p_events = {1: [], 2: [], 3: []}
+            for t_idx in [1, 2, 3]:
+                f_off = 0 if t_idx == 1 else (7 if t_idx == 2 else 14)
+                w_off = 4 if t_idx == 1 else (11 if t_idx == 2 else 18)
+
+                cur_note = None
+                cur_inst_id = "01"
+                cur_inst_name = "Lead Hook"
+                cur_wave = 0
+                cur_attack_fx = "Standard"
+                cur_evolution = "Sustain"
+                start_f = 0
+
+                for f_rel, fr in enumerate(pat_frames):
+                    st = fr["state"]
+                    freq = st[f_off] | (st[f_off + 1] << 8)
+                    wave = st[w_off]
+                    gate = bool(wave & 0x01)
+                    is_noise_drum = bool(wave & 0x80)
+
+                    if is_noise_drum:
+                        n = "D-4" if freq > 0x4000 else "C-3"
+                        inst_id = "05"
+                        inst_name = "Galois Noise Snare & Kick"
+                        attack_fx = "🥁 LFSR Burst Trigger"
+                        evolution = "Noise Snare Decay"
+                    elif gate:
+                        n = freq_to_note_str(freq)
+                        if t_idx == 1:
+                            inst_id = "01" if (wave & 0x40) else ("02" if (wave & 0x20) else "06")
+                            inst_name = "Heroic Dorian Lead" if inst_id == "01" else "Dual-Lead 3rd Saw"
+                            attack_fx = "🚀 Pitch-Scoop (-2 HT)" if (wave & 0x02 or f_rel % 12 == 0) else "⚡ HardSync Formant"
+                            evolution = "🌊 PWM Pulse Width LFO" if (wave & 0x40) else "🎶 Delayed Vibrato (5.5Hz)"
+                        elif t_idx == 2:
+                            inst_id = "03"
+                            inst_name = "Signature m11 Arpeggio"
+                            attack_fx = "⚡ 50Hz Raster Trigger"
+                            evolution = "🔄 6-Step m11 Arp Loop"
+                        else:
+                            inst_id = "04"
+                            inst_name = "Driving 16th Slap Bass"
+                            attack_fx = "💥 Slap-Pop (+12 HT Attack)" if (f_rel % 12 == 6) else "⚡ Schmalpuls Attack"
+                            evolution = "🎸 16tel Slap-Bass Run"
+                    else:
+                        n = "..."
+                        inst_id = "00"
+                        inst_name = "Pause / Stille"
+                        attack_fx = "---"
+                        evolution = "---"
+
+                    # Strike detection: Pitch changed, or Gate triggered, or Waveform switched
+                    if (n != cur_note or (wave & 0xF0) != (cur_wave & 0xF0)) and (n != "..." or cur_note != "..."):
+                        if cur_note is not None and cur_note != "...":
+                            dur = f_rel - start_f
+                            bar = 1 + start_f // 96
+                            beat = 1 + (start_f % 96) // 24
+                            sixteenth = 1 + (start_f % 24) // 6
+                            dur_label = "1/16" if dur <= 6 else ("1/8" if dur <= 12 else ("1/8 Pkt" if dur <= 18 else ("1/4" if dur <= 24 else ("1/2" if dur <= 48 else "Ganze"))))
+                            p_events[t_idx].append({
+                                "event_idx": len(p_events[t_idx]) + 1,
+                                "bar_pos": f"{bar}.{beat}.{sixteenth}",
+                                "start_frame": start_f,
+                                "start_sec": round(start_f * 0.02, 3),
+                                "dur_frames": dur,
+                                "dur_ms": dur * 20,
+                                "dur_label": dur_label,
+                                "note": cur_note,
+                                "inst_id": cur_inst_id,
+                                "inst_name": cur_inst_name,
+                                "wave": f"${cur_wave:02X}" if cur_wave else "$41",
+                                "attack_fx": cur_attack_fx,
+                                "evolution": cur_evolution
+                            })
+                        cur_note = n
+                        cur_inst_id = inst_id
+                        cur_inst_name = inst_name
+                        cur_wave = wave
+                        cur_attack_fx = attack_fx
+                        cur_evolution = evolution
+                        start_f = f_rel
+
+                if cur_note and cur_note != "...":
+                    dur = len(pat_frames) - start_f
+                    bar = 1 + start_f // 96
+                    beat = 1 + (start_f % 96) // 24
+                    sixteenth = 1 + (start_f % 24) // 6
+                    dur_label = "1/16" if dur <= 6 else ("1/8" if dur <= 12 else ("1/8 Pkt" if dur <= 18 else ("1/4" if dur <= 24 else ("1/2" if dur <= 48 else "Ganze"))))
+                    p_events[t_idx].append({
+                        "event_idx": len(p_events[t_idx]) + 1,
+                        "bar_pos": f"{bar}.{beat}.{sixteenth}",
+                        "start_frame": start_f,
+                        "start_sec": round(start_f * 0.02, 3),
+                        "dur_frames": dur,
+                        "dur_ms": dur * 20,
+                        "dur_label": dur_label,
+                        "note": cur_note,
+                        "inst_id": cur_inst_id,
+                        "inst_name": cur_inst_name,
+                        "wave": f"${cur_wave:02X}" if cur_wave else "$41",
+                        "attack_fx": cur_attack_fx,
+                        "evolution": cur_evolution
+                    })
+
+            pattern_events.append(p_events)
+
         return {
             "title": self.extractor.title,
             "author": self.extractor.author,
@@ -233,6 +346,7 @@ class HubbardTrackerDecompiler:
             "speed": 6,
             "instruments": HUBBARD_DEFAULT_INSTRUMENTS,
             "patterns": patterns,
+            "pattern_events": pattern_events,
             "order_list": list(range(len(patterns)))
         }
 
