@@ -58,14 +58,38 @@
     };
 
     const SECTION_TITLES = [
-        "INTRO - SPACE PULSE",
-        "THEME A - DORIAN HOOK",
-        "THEME A2 - OCTAVE ELEVATION",
-        "BRIDGE 1 - DUAL-LEAD 3RDS",
-        "SOLO CLIMAX - 32ND RUNS",
-        "VARIATION - m11 ARPEGGIO",
-        "THEME B - PROGRESSIVE CLIMAX",
-        "OUTRO - FADE / CADENCE"
+        "00: INTRO - SPACE PULSE",
+        "01: INTRO - HARMONIC CHORD SWELL",
+        "02: INTRO - 50Hz m11 INCEPTION",
+        "03: GROOVE - SLAP BASS & BEAT ENTRANCE",
+        "04: THEME A - HEROIC DORIAN HOOK",
+        "05: THEME A - OCTAVE ELEVATION",
+        "06: THEME A - 3RD HARMONY RESPONSE",
+        "07: THEME A - CADENCE RESOLUTION",
+        "08: BRIDGE 1 - DUAL-LEAD 3RDS & 6THS",
+        "09: BRIDGE 1 - MODAL TRANSITION (F-MAJ)",
+        "10: BRIDGE 1 - SYNCOPATED SLAP RUN",
+        "11: BRIDGE 1 - TURNAROUND",
+        "12: SOLO CLIMAX - 32ND VIRTUOSO RUNS",
+        "13: SOLO CLIMAX - ARPEGGIO CASCADES",
+        "14: SOLO CLIMAX - HIGH OCTAVE PEAK",
+        "15: SOLO CLIMAX - CADENCE DESCENT",
+        "16: THEME B - PROGRESSIVE DRIVE",
+        "17: THEME B - m11 ARPEGGIO EXPANSION",
+        "18: THEME B - COUNTER-MELODY RIFF",
+        "19: THEME B - DYNAMIC SWELL",
+        "20: BREAKDOWN - SLAP-BASS SOLO",
+        "21: BREAKDOWN - 12dB FILTER SWEEP",
+        "22: BREAKDOWN - SNARE INTERRUPT FILL",
+        "23: BREAKDOWN - RE-ENTRY BUILD",
+        "24: FINALE - FULL 3-VOICE TUTTI",
+        "25: FINALE - VIRTUOSO LEAD LAYER",
+        "26: FINALE - MASTER CADENCE (DORIAN 6TH)",
+        "27: FINALE - HARMONIC PEAK",
+        "28: OUTRO - SPACE PULSE RECAP",
+        "29: OUTRO - ARPEGGIO ECHO FADE",
+        "30: OUTRO - SLAP-BASS VAMP",
+        "31: OUTRO - MASTER LOOP POINT"
     ];
 
     // ------------------------------------------------------------------------
@@ -81,8 +105,8 @@
             this.speed = 6;
             this.clock = "pal";
 
-            // EBENE 4: Song-Arrangement Timeline (List of Pattern Slots)
-            this.orderList = [0, 1, 2, 3, 4, 5, 6, 7];
+            // EBENE 4: Song-Arrangement Timeline (All 32 Pattern Slots)
+            this.orderList = Array.from({length: 32}, (_, i) => i);
             this.activeSlotIdx = 0;
 
             // EBENE 3: Reusable Motifs Pool per voice
@@ -102,15 +126,15 @@
             this.redoStack = [];
         }
 
-        // Decompile Lightforce.sid into 4 Layers
+        // Decompile Lightforce.sid into 4 Layers (Full 32 Patterns)
         async decompileLightforce() {
-            const res = await fetch(`/api/decompile_tracker?sid=sid/Lightforce.sid`);
+            const res = await fetch(`/api/decompile_tracker?sid=sid/Lightforce.sid&patterns=32&rows=64&speed=6`);
             if (!res.ok) throw new Error("Fehler beim Dekompilieren von Lightforce.sid");
 
             const data = await res.json();
             this.bpm = data.bpm || 125;
             this.speed = data.speed || 6;
-            this.orderList = data.order_list && data.order_list.length ? data.order_list : [0, 1, 2, 3, 4, 5, 6, 7];
+            this.orderList = data.order_list && data.order_list.length ? data.order_list : Array.from({length: 32}, (_, i) => i);
 
             this.motifs = {};
             this.timelineLanes = { 1: [], 2: [], 3: [] };
@@ -1041,13 +1065,14 @@
         renderDecompressedMatrix();
         renderPiano();
 
-        // Load 44.1kHz authentic audio stems for Lightforce (3 isolated voice stems in parallel)
+        // Load 44.1kHz authentic audio stems for Lightforce (3 isolated voice stems for all 32 patterns = 12,288 frames)
         try {
             audio.init();
+            const totalFrames = 32 * 64 * 6; // 12,288 frames = ~4:05 min full length piece
             const [res1, res2, res3] = await Promise.all([
-                fetch(`/api/render?sid=sid/Lightforce.sid&v1=1&v2=0&v3=0&start=0&end=2400`),
-                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=1&v3=0&start=0&end=2400`),
-                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=0&v3=1&start=0&end=2400`)
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=1&v2=0&v3=0&start=0&end=${totalFrames}`),
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=1&v3=0&start=0&end=${totalFrames}`),
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=0&v3=1&start=0&end=${totalFrames}`)
             ]);
 
             const [ab1, ab2, ab3] = await Promise.all([
@@ -1556,7 +1581,8 @@
         });
 
         document.getElementById("btn-export-wav").addEventListener("click", () => {
-            window.location.href = `/api/render?sid=sid/Lightforce.sid&v1=1&v2=1&v3=1&start=0&end=2400`;
+            const totalFrames = model.orderList.length * 64 * model.speed;
+            window.location.href = `/api/render?sid=sid/Lightforce.sid&v1=1&v2=1&v3=1&start=0&end=${totalFrames}`;
         });
     }
 

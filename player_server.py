@@ -535,12 +535,16 @@ class MasterStudioHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_api_decompile_tracker(self, query):
         sid_rel_path = query.get("sid", ["sid/Commando.sid"])[0]
+        num_pats = int(query.get("patterns", ["32"])[0])
+        rows_per_pat = int(query.get("rows", ["64"])[0])
+        frames_per_row = int(query.get("speed", ["6"])[0])
+
         if not os.path.exists(sid_rel_path):
             self.send_error(404, f"SID file not found: {sid_rel_path}")
             return
 
         decompiler = HubbardTrackerDecompiler(sid_rel_path)
-        tracker_data = decompiler.decompile_to_tracker(num_patterns=4, rows_per_pattern=64, frames_per_row=6)
+        tracker_data = decompiler.decompile_to_tracker(num_patterns=num_pats, rows_per_pattern=rows_per_pat, frames_per_row=frames_per_row)
 
         json_bytes = json.dumps(tracker_data, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
