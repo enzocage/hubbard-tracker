@@ -9,16 +9,19 @@ A cycle-accurate **Commodore 64 MOS 6581 SID Music Workstation, 6502 Bytecode De
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Workstations & Tools
 
-### 1. 🌟 Hubbard Motif Tracker 4 (`tracker4.html`) — Pattern-Centric Reusable Motif Workstation
-* **Pattern & Motif Decomposer:** Automatically splits continuous 3-voice SID compositions into reusable atomic motifs (`M01`, `M02` Melody Lead, `A01`, `A02` Arpeggios, `B01`, `D01` Bass & Drum Riffs).
-* **3-Voice Multi-Track Arranger Timeline:** 3 independent horizontal lanes with colored motif blocks, duration metrics, solo/mute controls, and real-time VU-meters.
-* **Modular Motif & Pitch Matrix Editor:** Visual step-by-step pitch grid with instant transposition (±1 / ±12), scale quantization, reverse/invert, and single-voice acoustic WYSIWYG audition.
-* **Integrated MOS 6581 Sound Sculptor:** Real-time waveform matrix ($41, $21, $11, $81, $15, $43), pulse width duty cycle meter, ADSR envelope canvas, and sub-tick macro arpeggios.
-* **Live Piano & PC Keyboard Mapping:** Play and record with the active motif's authentic instrument across all octaves.
+### 1. 🚀 Lightforce 4-Layer Workstation (`lightforce.html`) — Dedicated Masterpiece Decomposer
+* **Exklusiv für Rob Hubbards Meisterwerk *Lightforce* (1986, FTL Games)** in D-Dorisch.
+* **Ebene 4 (Arrangement-Timeline):** 8 modulare Phrasen (*Intro, Hook A, Octave Hook A2, Bridge 3rds, Solo Climax, m11 Arp Expansion, Climax B, Outro*).
+* **Ebene 3 (Motif-Entitäten):** Zerlegung in greifbare, wiederholbare Bausteine pro Spur (🔵 Lead Motifs `L01..L04`, 🟠 Arp Motifs `A01..A03`, 🟢 Bass & Drums `B01..D01`).
+* **Ebene 2 (Dekomprimierte Noten-Matrix):** 64 Steps voll dekomprimiert für sequentielles Editieren, Halbton/Oktaven-Transposition, D-Dorisch Skalenquantisierung, Umkehrung und Note-Offs.
+* **Ebene 1 (MOS 6581 Sound-Lab):** Alle 6 Lightforce-Presets (*Heroic Dorian Lead $41, Dual-Lead 3rd Saw $21, Signature m11 Arp $41, 16th Slap Bass $41, Galois Snare/Kick $81, Space Pad $41*), ADSR-Kurven-Canvas und spielbares Live-Keyboard.
 
-### 2. 🚀 Hubbard Tracker 3 (`tracker3.html`) — Modular 3-Tier Layered Architecture
+### 2. 🌟 Hubbard Motif Tracker 4 (`tracker4.html`) — Pattern-Centric Reusable Motif Workstation
+* **Pattern & Motif Decomposer:** Universal für alle 19 SID-Werke mit horizontalen Spurlanes, Motif-Pool und Noten-Matrix.
+
+### 3. 🚀 Hubbard Tracker 3 (`tracker3.html`) — Modular 3-Tier Layered Architecture
 * Layer 1 (SID Hardware & Audio), Layer 2 (Stream & Pattern Mining), Layer 3 (Visual Editor & Resizable Splitters).
 
 ### 3. 🎛️ HTF Studio Pro v2 (`tracker2.html`) — Native Hubbard Tracker Format

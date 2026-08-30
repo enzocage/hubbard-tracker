@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIGHTFORCE 1986 • 4-Ebenen Dekomposition & Motif-Tracker (Rob Hubbard)</title>
+    <link rel="stylesheet" href="lightforce.css?v=1.0.0">
+</head>
+<body class="lf-body" data-theme="cyber">
+
+    <div class="lf-app-container">
+
+        <!-- ================================================================= -->
+        <!-- 1. TOP HEADER & LIGHTFORCE WORKSPACE HUD                          -->
+        <!-- ================================================================= -->
+        <header class="lf-header">
+            <div class="lf-brand">
+                <div class="lf-logo-badge">LIGHTFORCE 4.0</div>
+                <div>
+                    <h1>LIGHTFORCE (1986) • ROB HUBBARD</h1>
+                    <div class="lf-sub">4-EBENEN DEKOMPOSITION • D-DORISCH • 3 STIMMEN PAL 50Hz • FTL GAMES</div>
+                </div>
+            </div>
+
+            <!-- Master Transport & Tools -->
+            <div class="lf-header-controls">
+                <div class="lf-btn-group">
+                    <button class="lf-btn lf-btn-play" id="btn-play-song" title="Ganzen Lightforce Song abspielen (Space)">
+                        <span class="icon">▶</span> SONG
+                    </button>
+                    <button class="lf-btn lf-btn-loop" id="btn-play-motif" title="Ausgewähltes Motif / Pattern loopen">
+                        <span class="icon">🔁</span> MOTIF
+                    </button>
+                    <button class="lf-btn lf-btn-stop" id="btn-stop" title="Wiedergabe stoppen (Esc)">
+                        <span class="icon">⏹</span> STOP
+                    </button>
+                    <button class="lf-btn lf-btn-rec active" id="btn-rec-mode" title="Live-Edit-Modus aktiv">
+                        <span class="icon">🔴</span> EDIT
+                    </button>
+                </div>
+
+                <div class="lf-param-box">
+                    <label>BPM</label>
+                    <input type="number" id="inp-bpm" min="40" max="240" value="125">
+                </div>
+                <div class="lf-param-box">
+                    <label>SPEED</label>
+                    <input type="number" id="inp-speed" min="1" max="16" value="6" title="Frames pro 16tel-Schritt">
+                </div>
+                <div class="lf-param-box">
+                    <label>CLOCK</label>
+                    <select id="sel-clock">
+                        <option value="pal" selected>PAL 50Hz</option>
+                        <option value="ntsc">NTSC 60Hz</option>
+                    </select>
+                </div>
+
+                <select id="sel-theme" class="lf-select" title="Farbschema wählen">
+                    <option value="cyber" selected>Cyber Slate</option>
+                    <option value="ft2">FastTracker II</option>
+                    <option value="c64">Commodore 64</option>
+                    <option value="matrix">Matrix Green</option>
+                    <option value="dracula">Dracula Dark</option>
+                </select>
+
+                <div class="lf-export-actions">
+                    <button class="lf-btn-export" id="btn-export-sid" title="Als spielbare C64 .SID-Datei exportieren">💾 .SID</button>
+                    <button class="lf-btn-export" id="btn-export-htf" title="Als JSON-Projekt speichern">📄 .HTF</button>
+                    <button class="lf-btn-export" id="btn-export-wav" title="Als 44.1kHz WAV rendern">🔊 .WAV</button>
+                </div>
+
+                <button class="lf-btn-help" id="btn-help" title="Hilfe & Shortcuts (F1)">❓ HILFE (F1)</button>
+            </div>
+        </header>
+
+        <!-- ================================================================= -->
+        <!-- 2. EBENE 4: SONG-ARRANGEMENT & MAKRO-TIMELINE (8 ABSCHNITTE)      -->
+        <!-- ================================================================= -->
+        <section class="lf-layer4-panel">
+            <div class="lf-panel-header">
+                <div class="ph-left">
+                    <span class="layer-badge l4">EBENE 4</span>
+                    <span class="lf-tag">🎼 GESAMTES SONG-ARRANGEMENT & TIMELINE (MAKRO-STRUKTUR)</span>
+                    <span class="lf-stat-badge" id="arranger-stats-badge">8 PHRASEN • 32 TAKTE • 1:01 MIN</span>
+                </div>
+                <div class="ph-right">
+                    <button class="lf-btn-xs btn-accent" id="btn-add-order-slot" title="Neuen Slot anfügen">+ SLOT</button>
+                    <button class="lf-btn-xs" id="btn-dup-order-slot" title="Slot duplizieren">⧉ DUPLIZIEREN</button>
+                    <button class="lf-btn-xs" id="btn-var-order-slot" title="Ausgewählten Slot als Variation abspalten (Make Unique)">✨ VARIATION</button>
+                    <button class="lf-btn-xs lf-btn-del" id="btn-del-order-slot" title="Slot löschen">🗑️ LÖSCHEN</button>
+                    <button class="lf-btn-xs" id="btn-move-left" title="Nach links verschieben">◄ LINKS</button>
+                    <button class="lf-btn-xs" id="btn-move-right" title="Nach rechts verschieben">RECHTS ►</button>
+                </div>
+            </div>
+
+            <!-- Horizontal Scrollable Song Timeline -->
+            <div class="timeline-scroll-box" id="timeline-scroll-pane">
+                <div class="timeline-slots" id="timeline-slots-container">
+                    <!-- Populated dynamically by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 3. EBENE 3: 3-SPUR WIEDERKEHRENDE MOTIF-LANES (MODULARE ENTITÄTEN)-->
+        <!-- ================================================================= -->
+        <section class="lf-layer3-panel">
+            <div class="lf-panel-header">
+                <div class="ph-left">
+                    <span class="layer-badge l3">EBENE 3</span>
+                    <span class="lf-tag">🧩 3-SPUR MOTIF-ENTITÄTEN (WIEDERHOLTE PHRASEN & RIFFS)</span>
+                    <span class="lf-sub-tag">Klicken Sie auf ein Motiv, um seine Noten (Ebene 2) & Sound (Ebene 1) zu editieren</span>
+                </div>
+                <div class="ph-right">
+                    <button class="lf-btn-xs btn-accent" id="btn-new-motif" title="Neues leeres Motiv erzeugen">+ NEUES MOTIF</button>
+                </div>
+            </div>
+
+            <div class="voice-lanes-container">
+                <!-- Lane 1: Melody & Dual Lead -->
+                <div class="voice-lane lane-1">
+                    <div class="lane-info">
+                        <div class="lane-title"><span class="dot d1"></span> SPUR 1: LEAD MOTIFS</div>
+                        <div class="lane-btns">
+                            <button class="btn-m" id="btn-mute-1">M</button>
+                            <button class="btn-s" id="btn-solo-1">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-1"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-motif-blocks" id="lane-motifs-1">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Lane 2: Signature m11 Arpeggios & Harmony -->
+                <div class="voice-lane lane-2">
+                    <div class="lane-info">
+                        <div class="lane-title"><span class="dot d2"></span> SPUR 2: m11 ARP MOTIFS</div>
+                        <div class="lane-btns">
+                            <button class="btn-m" id="btn-mute-2">M</button>
+                            <button class="btn-s" id="btn-solo-2">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-2"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-motif-blocks" id="lane-motifs-2">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Lane 3: 16th Slap Bass & Drum Multiplex -->
+                <div class="voice-lane lane-3">
+                    <div class="lane-info">
+                        <div class="lane-title"><span class="dot d3"></span> SPUR 3: BASS / DRUMS</div>
+                        <div class="lane-btns">
+                            <button class="btn-m" id="btn-mute-3">M</button>
+                            <button class="btn-s" id="btn-solo-3">S</button>
+                            <div class="lane-vu"><div class="lane-vu-fill" id="vu-lane-3"></div></div>
+                        </div>
+                    </div>
+                    <div class="lane-motif-blocks" id="lane-motifs-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- 4. WORKBENCH: EBENE 2 (NOTEN-MATRIX) & EBENE 1 (MOS 6581 SYNTH)   -->
+        <!-- ================================================================= -->
+        <div class="lf-workbench-grid">
+
+            <!-- 4.1 MOTIF-BIBLIOTHEK (LINKS) -->
+            <aside class="lf-sidebar-pool">
+                <div class="lf-panel-header">
+                    <span class="lf-tag">🗂️ MOTIF-POOL (LIGHTFORCE)</span>
+                </div>
+                <div class="pool-scroll-area">
+                    <div class="pool-group">
+                        <div class="pg-title t1-col">🔵 LEAD THEMEN (SPUR 1)</div>
+                        <div class="pg-list" id="pool-list-1"></div>
+                    </div>
+                    <div class="pool-group">
+                        <div class="pg-title t2-col">🟠 m11 ARP-PATTERNS (SPUR 2)</div>
+                        <div class="pg-list" id="pool-list-2"></div>
+                    </div>
+                    <div class="pool-group">
+                        <div class="pg-title t3-col">🟢 BASS & BEATS (SPUR 3)</div>
+                        <div class="pg-list" id="pool-list-3"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 4.2 MITTE: EBENE 2 - DEKOMPRIMIERTE NOTEN- & TRACKER-MATRIX -->
+            <main class="lf-editor-main">
+                <div class="lf-panel-header editor-hud">
+                    <div class="hud-left">
+                        <span class="layer-badge l2">EBENE 2</span>
+                        <span class="motif-id-badge" id="active-motif-badge">L01</span>
+                        <span class="motif-name-text" id="active-motif-name">HEROIC DORIAN LEAD HOOK (64 STEPS)</span>
+                    </div>
+
+                    <!-- Transformation & Pitch Editing Toolkit -->
+                    <div class="lf-toolkit">
+                        <div class="lf-btn-group">
+                            <button class="lf-tool-btn" id="btn-undo" title="Rückgängig (Ctrl+Z)">↩</button>
+                            <button class="lf-tool-btn" id="btn-redo" title="Wiederholen (Ctrl+Y)">↪</button>
+                        </div>
+                        <div class="lf-btn-group">
+                            <button class="lf-tool-btn" id="btn-trans-dn" title="Halbton tiefer (-1)">-1</button>
+                            <button class="lf-tool-btn" id="btn-trans-up" title="Halbton höher (+1)">+1</button>
+                            <button class="lf-tool-btn" id="btn-oct-dn" title="Oktave tiefer (-12)">-12</button>
+                            <button class="lf-tool-btn" id="btn-oct-up" title="Oktave höher (+12)">+12</button>
+                        </div>
+                        <div class="lf-btn-group">
+                            <select id="sel-quantize" class="lf-select-xs" title="Skalen-Quantisierung">
+                                <option value="none">Skala: Frei</option>
+                                <option value="dorian" selected>D-Dorisch (Lightforce)</option>
+                                <option value="aeolian">D-Natürlich Moll</option>
+                                <option value="major">F-Dur (Parallele)</option>
+                                <option value="blues">D-Blues Scale</option>
+                            </select>
+                            <button class="lf-tool-btn" id="btn-quantize" title="Auf gewählte Skala quantisieren">QUANT</button>
+                        </div>
+                        <div class="lf-btn-group">
+                            <button class="lf-tool-btn" id="btn-reverse" title="Notenfolge umkehren">REV</button>
+                            <button class="lf-tool-btn" id="btn-invert" title="Noten an Achse spiegeln">INV</button>
+                            <button class="lf-tool-btn" id="btn-insert-noteoff" title="Note-Off einfügen (Key 1 / ===)">=== OFF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 64-Step Matrix Table for Active Motif -->
+                <div class="matrix-scroll-pane" id="matrix-scroll-pane">
+                    <div class="matrix-table" id="matrix-grid-table">
+                        <!-- Populated by JS: Step, Note, Duration, Instrument, Waveform, FX Macro -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- 4.3 RECHTS: EBENE 1 - MOS 6581 SOUND SCULPTOR & LIVE KEYBOARD -->
+            <aside class="lf-sidebar-synth">
+                <div class="lf-panel-header">
+                    <span class="layer-badge l1">EBENE 1</span>
+                    <span class="lf-tag">🎛️ MOS 6581 SOUND-LAB</span>
+                    <span class="inst-tag" id="lbl-active-inst">INST #01</span>
+                </div>
+
+                <div class="synth-body">
+                    <!-- Lightforce Preset Selector -->
+                    <div class="synth-ctrl-card">
+                        <label class="synth-lbl">LIGHTFORCE SIGNATURE PRESETS:</label>
+                        <select id="sel-lf-preset" class="lf-select-sm">
+                            <option value="01_dorian_lead" selected>01. Heroic Dorian PWM Lead ($41)</option>
+                            <option value="02_dual_lead_saw">02. Dual-Lead 3rd Harmony Saw ($21)</option>
+                            <option value="03_m11_arpeggio">03. Signature m11 6-Step Arpeggio ($41)</option>
+                            <option value="04_slap_bass">04. Driving 16th Slap Bass ($41 narrow)</option>
+                            <option value="05_snare_kick">05. Galois Noise Snare & Kick ($81)</option>
+                            <option value="06_space_pad">06. Ambient Bandpass Space Pad ($41)</option>
+                        </select>
+                    </div>
+
+                    <!-- Waveform Selector -->
+                    <div class="synth-ctrl-card">
+                        <div class="card-head-row">
+                            <label class="synth-lbl">WELLENFORM & HARDWARE-FLAGS:</label>
+                            <span class="val-txt" id="lbl-wave-hex">$41 (Puls)</span>
+                        </div>
+                        <div class="wave-matrix">
+                            <button class="btn-w active" data-wave="0x41" title="Puls / Rechteck">⎍ $41</button>
+                            <button class="btn-w" data-wave="0x21" title="Sägezahn">▲ $21</button>
+                            <button class="btn-w" data-wave="0x11" title="Dreieck">~ $11</button>
+                            <button class="btn-w" data-wave="0x81" title="Rauschen / Snare">▒ $81</button>
+                            <button class="btn-w" data-wave="0x15" title="Ring-Modulation">▲🔔 $15</button>
+                            <button class="btn-w" data-wave="0x43" title="Hard-Sync">⎍⚙ $43</button>
+                        </div>
+                    </div>
+
+                    <!-- Pulse Width -->
+                    <div class="synth-ctrl-card">
+                        <div class="card-head-row">
+                            <label class="synth-lbl">PULSBREITE (PW):</label>
+                            <span class="val-txt" id="lbl-pw-val">2048 (50%)</span>
+                        </div>
+                        <input type="range" id="inp-pw" min="0" max="4095" value="2048" class="lf-range">
+                        <div class="pw-track"><div class="pw-fill" id="pw-fill" style="width: 50%;"></div></div>
+                    </div>
+
+                    <!-- ADSR Envelope Visualizer -->
+                    <div class="synth-ctrl-card">
+                        <div class="card-head-row">
+                            <label class="synth-lbl">ADSR HÜLLKURVE:</label>
+                            <span class="val-txt" id="lbl-adsr-txt">A:0 D:9 S:0 R:0</span>
+                        </div>
+                        <div class="adsr-box">
+                            <canvas id="adsr-canvas" width="280" height="38"></canvas>
+                        </div>
+                        <div class="adsr-sliders">
+                            <div class="adsr-unit"><label>A</label><input type="range" id="inp-att" min="0" max="15" value="0"><span id="lbl-att">0</span></div>
+                            <div class="adsr-unit"><label>D</label><input type="range" id="inp-dec" min="0" max="15" value="9"><span id="lbl-dec">9</span></div>
+                            <div class="adsr-unit"><label>S</label><input type="range" id="inp-sus" min="0" max="15" value="0"><span id="lbl-sus">0</span></div>
+                            <div class="adsr-unit"><label>R</label><input type="range" id="inp-rel" min="0" max="15" value="0"><span id="lbl-rel">0</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Tick Macro Modulator -->
+                    <div class="synth-ctrl-card">
+                        <label class="synth-lbl">SUB-TICK MACRO MODULATOR:</label>
+                        <select id="sel-macro" class="lf-select-sm">
+                            <option value="A-m11" selected>A-m11: Lightforce Arp (+0, +3, +7, +10, +14, +17)</option>
+                            <option value="P02">P02: Heroic Pitch-Scoop (-2 Halbtöne)</option>
+                            <option value="V08">V08: Delayed Vibrato (5.5Hz LFO)</option>
+                            <option value="S12">S12: Slap-Bass Oktav-Pop (+12 HT)</option>
+                            <option value="D-SD">D-SD: Snare Interrupt (Stimme 3)</option>
+                            <option value="none">Kein Macro (Statisch)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Route Toggle -->
+                    <div class="synth-ctrl-card row-flex">
+                        <label class="synth-lbl">12dB MASTER-FILTER ROUTING:</label>
+                        <input type="checkbox" id="chk-filter" checked>
+                    </div>
+
+                    <!-- Live Piano Keyboard for Active Lightforce Instrument -->
+                    <div class="synth-ctrl-card keyboard-card">
+                        <div class="card-head-row">
+                            <label class="synth-lbl">🎹 LIVE-KEYBOARD (AKTIVES INSTRUMENT):</label>
+                            <div style="display:flex; gap:3px; align-items:center;">
+                                <button class="lf-btn-xs" id="btn-kb-oct-dn">-</button>
+                                <span id="lbl-kb-oct" style="font-size:0.56rem; font-weight:800;">OKT: 4</span>
+                                <button class="lf-btn-xs" id="btn-kb-oct-up">+</button>
+                            </div>
+                        </div>
+                        <div class="piano-keys-wrapper" id="piano-keys-container">
+                            <!-- Keys generated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- 5. BOTTOM MASTER FILTER, SCOPE & 6502 TELEMETRY                   -->
+        <!-- ================================================================= -->
+        <footer class="lf-footer">
+            <div class="scope-box">
+                <canvas id="scope-canvas" width="220" height="32"></canvas>
+            </div>
+
+            <!-- Master MOS 6581 Analog Filter -->
+            <div class="master-filter-box">
+                <span class="flt-lbl">6581 MASTER FILTER:</span>
+                <select id="sel-flt-mode" class="lf-select-xs">
+                    <option value="0x2F" selected>12dB Bandpass ($2F)</option>
+                    <option value="0x1F">12dB Lowpass ($1F)</option>
+                    <option value="0x4F">12dB Highpass ($4F)</option>
+                    <option value="0x3F">Notch ($3F)</option>
+                    <option value="0x0F">Bypass</option>
+                </select>
+                <div class="flt-param">
+                    <label>CUTOFF:</label>
+                    <input type="range" id="inp-flt-cut" min="0" max="2047" value="1200">
+                </div>
+                <div class="flt-param">
+                    <label>RES (Q):</label>
+                    <input type="range" id="inp-flt-res" min="0" max="15" value="14">
+                </div>
+                <div class="flt-param">
+                    <label>DRIVE:</label>
+                    <input type="range" id="inp-flt-drive" min="0" max="10" value="3">
+                </div>
+                <div class="flt-param">
+                    <label>VOL:</label>
+                    <input type="range" id="inp-master-vol" min="0" max="100" value="85">
+                </div>
+            </div>
+
+            <div class="telemetry-box">
+                <span class="tele-badge" id="tele-step">STEP: 00 / 63</span>
+                <span class="tele-badge" id="tele-frame">FRAME: 0000</span>
+                <span class="tele-badge live">50.0 Hz PAL</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Keyboard Shortcuts Help Modal (F1) -->
+    <div class="lf-modal-overlay" id="help-modal" style="display: none;">
+        <div class="lf-modal-content">
+            <div class="modal-head">
+                <h2>🎹 LIGHTFORCE WORKSTATION • WORKFLOW & TASTENBEFEHLE</h2>
+                <button class="btn-close" id="btn-close-help">✖</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-grid">
+                    <div class="grid-col">
+                        <h3>🎼 NOTENEINGABE & NAVIGATION</h3>
+                        <ul>
+                            <li><kbd>A</kbd> <kbd>W</kbd> <kbd>S</kbd> <kbd>E</kbd> <kbd>D</kbd> <kbd>F</kbd> ... : Noten spielen & eingeben</li>
+                            <li><kbd>1</kbd> oder <kbd>Caps</kbd> : Note-Off (===) eingeben</li>
+                            <li><kbd>Del</kbd> / <kbd>Backspace</kbd> : Feld leeren (...)</li>
+                            <li><kbd>↑</kbd> <kbd>↓</kbd> : Step hoch / runter</li>
+                            <li><kbd>Space</kbd> : Start / Stop (Song)</li>
+                            <li><kbd>Esc</kbd> : Stop</li>
+                        </ul>
+                    </div>
+                    <div class="grid-col">
+                        <h3>🎛️ SPUR- & MOTIF-STEUERUNG</h3>
+                        <ul>
+                            <li><kbd>F9</kbd> : Spur 1 Mute / Unmute</li>
+                            <li><kbd>F10</kbd> : Spur 2 Mute / Unmute</li>
+                            <li><kbd>F11</kbd> : Spur 3 Mute / Unmute</li>
+                            <li><kbd>F12</kbd> : Alle Spuren aktivieren</li>
+                            <li><kbd>Ctrl+Z</kbd> : Rückgängig (Undo)</li>
+                            <li><kbd>Ctrl+Y</kbd> : Wiederholen (Redo)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightforce Workstation Controller Script -->
+    <script src="lightforce.js?v=1.0.0"></script>
+</body>
+</html>
