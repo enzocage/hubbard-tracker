@@ -514,44 +514,150 @@
             } catch (e) {}
         }
 
-        // Live Play Note on Keyboard
-        playNoteLive(noteStr, trackIdx, instWave = 0x41) {
+        // Live Play Note with Active Ebene 1 MOS 6581 Patch
+        playNoteLive(noteStr, instPatch) {
             this.init();
             this.resume();
+
             const noteObj = MIDI_NOTE_MAP[noteStr];
             if (!noteObj || noteObj.freqHz <= 0) return;
 
-            const buf = this.voiceBuffers[trackIdx] || this.voiceBuffers[1];
-            if (buf) {
-                const refMidi = 60; // C-4
-                const rate = Math.pow(2.0, (noteObj.midi - refMidi) / 12.0);
-                try {
-                    const src = this.audioCtx.createBufferSource();
-                    src.buffer = buf;
-                    src.playbackRate.value = Math.max(0.1, Math.min(8.0, rate));
-                    const env = this.audioCtx.createGain();
-                    const now = this.audioCtx.currentTime;
-                    env.gain.setValueAtTime(0.9, now);
-                    env.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-                    src.connect(env);
-                    env.connect(this.voiceGains[trackIdx]);
-                    src.start(now, 0, 0.5);
-                    return;
-                } catch (e) {}
+            const inst = instPatch || model.activeInstrument;
+            const now = this.audioCtx.currentTime;
+
+            // Attack & Decay/Release timing tables (MOS 6581 Hardware spec in seconds)
+            const attackTable = [0.002, 0.008, 0.016, 0.024, 0.038, 0.056, 0.068, 0.080, 0.100, 0.250, 0.500, 0.800, 1.0, 3.0, 5.0, 8.0];
+            const decayReleaseTable = [0.006, 0.024, 0.048, 0.072, 0.114, 0.168, 0.204, 0.240, 0.300, 0.750, 1.5, 2.4, 3.0, 9.0, 15.0, 24.0];
+
+            const attSec = attackTable[inst.attack] !== undefined ? attackTable[inst.attack] : 0.002;
+            const decSec = decayReleaseTable[inst.decay] !== undefined ? decayReleaseTable[inst.decay] : 0.1;
+            const susLvl = Math.max(0.001, (inst.sustain / 15.0));
+            const relSec = decayReleaseTable[inst.release] !== undefined ? decayReleaseTable[inst.release] : 0.1;
+            const holdSec = 0.35; // Note audition hold duration
+
+            const env = this.audioCtx.createGain();
+            env.gain.setValueAtTime(0.0001, now);
+            env.gain.linearRampToValueAtTime(0.85, now + attSec);
+            env.gain.exponentialRampToValueAtTime(Math.max(0.0001, susLvl * 0.85), now + attSec + decSec);
+            env.gain.setValueAtTime(Math.max(0.0001, susLvl * 0.85), now + holdSec);
+            env.gain.exponentialRampToValueAtTime(0.0001, now + holdSec + relSec);
+
+            // Audio Routing: Filtered or Dry
+            const curMotif = model.motifs[model.activeMotifId];
+            const track = inst.track || (curMotif ? curMotif.track : 1);
+            const voiceGain = this.voiceGains[track] || this.masterGain;
+
+            if (inst.filter) {
+                env.connect(this.masterFilter);
+            } else {
+                env.connect(voiceGain);
             }
 
-            // Fallback Software Osc
-            const now = this.audioCtx.currentTime;
+            const totalDur = holdSec + relSec + 0.05;
+
+            // 1. Galois Noise Generator ($81 - Snare / Drum)
+            if (inst.wave === 0x81) {
+                const bufferSize = Math.floor(this.audioCtx.sampleRate * Math.min(1.0, totalDur));
+                const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2.0 - 1.0;
+                }
+                const noise = this.audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const noiseFilter = this.audioCtx.createBiquadFilter();
+                noiseFilter.type = "highpass";
+                noiseFilter.frequency.value = 1200;
+
+                noise.connect(noiseFilter);
+                noiseFilter.connect(env);
+                noise.start(now);
+                noise.stop(now + totalDur);
+                return;
+            }
+
+            // 2. Continuous Tone Oscillators ($41 Pulse, $21 Saw, $11 Tri, $15 Ringmod, $43 Sync)
             const osc = this.audioCtx.createOscillator();
-            const env = this.audioCtx.createGain();
-            osc.type = (instWave === 0x21) ? "sawtooth" : ((instWave === 0x11) ? "triangle" : "square");
-            osc.frequency.setValueAtTime(noteObj.freqHz, now);
-            env.gain.setValueAtTime(0.6, now);
-            env.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            const baseFreq = noteObj.freqHz;
+
+            if (inst.wave === 0x41) {
+                // Pulse Waveform with Fourier Series for variable Duty Cycle (PW)
+                const pwNorm = Math.max(0.05, Math.min(0.95, (inst.pw || 2048) / 4095.0));
+                const numHarmonics = 48;
+                const real = new Float32Array(numHarmonics);
+                const imag = new Float32Array(numHarmonics);
+                for (let n = 1; n < numHarmonics; n++) {
+                    imag[n] = (2.0 / (n * Math.PI)) * Math.sin(n * Math.PI * pwNorm);
+                }
+                try {
+                    const wave = this.audioCtx.createPeriodicWave(real, imag, { disableNormalization: false });
+                    osc.setPeriodicWave(wave);
+                } catch (e) {
+                    osc.type = "square";
+                }
+            } else if (inst.wave === 0x21) {
+                osc.type = "sawtooth";
+            } else if (inst.wave === 0x11) {
+                osc.type = "triangle";
+            } else if (inst.wave === 0x15) {
+                // Ring Modulation: Two harmonically related triangle oscillators
+                osc.type = "triangle";
+                const ringOsc = this.audioCtx.createOscillator();
+                ringOsc.type = "triangle";
+                ringOsc.frequency.setValueAtTime(baseFreq * 1.5, now);
+                const ringGain = this.audioCtx.createGain();
+                ringOsc.connect(ringGain.gain);
+                ringOsc.start(now);
+                ringOsc.stop(now + totalDur);
+            } else if (inst.wave === 0x43) {
+                // Hard-Sync Formant Simulation
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(baseFreq * 2.8, now);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.06);
+            } else {
+                osc.type = "sawtooth";
+            }
+
+            // 3. Sub-Tick Macro Modulators:
+            if (inst.macro === "P02") {
+                // Heroic Pitch-Scoop: Starts 2 semitones down, glides up in 50ms
+                const startFreq = baseFreq * Math.pow(2.0, -2.0 / 12.0);
+                osc.frequency.setValueAtTime(startFreq, now);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.05);
+            } else if (inst.macro === "S12") {
+                // Slap Bass Octave Pop: +12 semitones on note attack
+                osc.frequency.setValueAtTime(baseFreq * 2.0, now);
+                osc.frequency.setValueAtTime(baseFreq, now + 0.035);
+            } else if (inst.macro === "V08") {
+                // Delayed Vibrato: 5.5Hz LFO starting after 150ms
+                const vibLfo = this.audioCtx.createOscillator();
+                const vibGain = this.audioCtx.createGain();
+                vibLfo.frequency.value = 5.5;
+                vibGain.gain.setValueAtTime(0, now);
+                vibGain.gain.setValueAtTime(0, now + 0.15);
+                vibGain.gain.linearRampToValueAtTime(baseFreq * 0.025, now + 0.3);
+                vibLfo.connect(vibGain);
+                vibGain.connect(osc.frequency);
+                vibLfo.start(now);
+                vibLfo.stop(now + totalDur);
+                osc.frequency.setValueAtTime(baseFreq, now);
+            } else if (inst.macro === "A-m11") {
+                // Lightforce 6-step m11 Arpeggio loop (+0, +3, +7, +10, +14, +17 semitones)
+                const arpOffsets = [0, 3, 7, 10, 14, 17];
+                const frameSec = 0.02;
+                for (let step = 0; step < 20; step++) {
+                    const semi = arpOffsets[step % arpOffsets.length];
+                    const f = baseFreq * Math.pow(2.0, semi / 12.0);
+                    osc.frequency.setValueAtTime(f, now + step * frameSec);
+                }
+            } else if (inst.wave !== 0x43) {
+                osc.frequency.setValueAtTime(baseFreq, now);
+            }
+
             osc.connect(env);
-            env.connect(this.voiceGains[trackIdx]);
             osc.start(now);
-            osc.stop(now + 0.35);
+            osc.stop(now + totalDur);
         }
     }
 
@@ -852,36 +958,43 @@
     }
 
     function insertNote(noteStr) {
-        model.saveUndo();
         const motif = model.motifs[model.activeMotifId];
-        if (!motif || !motif.steps[model.activeStep]) return;
-
         const inst = model.activeInstrument;
-        if (noteStr === "...") {
-            motif.steps[model.activeStep] = { step: model.activeStep, note: "...", dur: "L06", inst: "00", wave: "---", fx: "..." };
-        } else if (noteStr === "===") {
-            motif.steps[model.activeStep] = { step: model.activeStep, note: "===", dur: "L06", inst: "01", wave: "---", fx: "OFF" };
-        } else {
-            motif.steps[model.activeStep] = {
-                step: model.activeStep,
-                note: noteStr,
-                dur: "L06",
-                inst: String(inst.id).padStart(2, '0'),
-                wave: `$${inst.wave.toString(16).toUpperCase()}`,
-                fx: inst.macro
-            };
-            audio.playNoteLive(noteStr, motif.track, inst.wave);
+
+        if (model.editMode) {
+            model.saveUndo();
+            if (motif && motif.steps[model.activeStep]) {
+                if (noteStr === "...") {
+                    motif.steps[model.activeStep] = { step: model.activeStep, note: "...", dur: "L06", inst: "00", wave: "---", fx: "..." };
+                } else if (noteStr === "===") {
+                    motif.steps[model.activeStep] = { step: model.activeStep, note: "===", dur: "L06", inst: "01", wave: "---", fx: "OFF" };
+                } else {
+                    motif.steps[model.activeStep] = {
+                        step: model.activeStep,
+                        note: noteStr,
+                        dur: "L06",
+                        inst: String(inst.id).padStart(2, '0'),
+                        wave: `$${inst.wave.toString(16).toUpperCase()}`,
+                        fx: inst.macro
+                    };
+                }
+
+                renderDecompressedMatrix();
+                renderArrangementTimeline();
+                renderMotifLanes();
+
+                model.activeStep = Math.min(63, model.activeStep + 1);
+                const nextRow = document.getElementById(`m-row-${model.activeStep}`);
+                if (nextRow) {
+                    document.querySelectorAll(".matrix-row").forEach(r => r.classList.remove("cursor"));
+                    nextRow.classList.add("cursor");
+                }
+            }
         }
 
-        renderDecompressedMatrix();
-        renderArrangementTimeline();
-        renderMotifLanes();
-
-        model.activeStep = Math.min(63, model.activeStep + 1);
-        const nextRow = document.getElementById(`m-row-${model.activeStep}`);
-        if (nextRow) {
-            document.querySelectorAll(".matrix-row").forEach(r => r.classList.remove("cursor"));
-            nextRow.classList.add("cursor");
+        // Always synthesize and play the note with the active instrument from Ebene 1!
+        if (noteStr !== "..." && noteStr !== "===") {
+            audio.playNoteLive(noteStr, inst);
         }
     }
 
@@ -966,6 +1079,15 @@
         document.getElementById("btn-play-song").addEventListener("click", () => audio.startPlayback(false, model.activeSlotIdx));
         document.getElementById("btn-play-motif").addEventListener("click", () => audio.startPlayback(true, model.activeSlotIdx));
         document.getElementById("btn-stop").addEventListener("click", () => audio.stopPlayback());
+
+        // Edit / Record Mode Toggle Button
+        const btnRec = document.getElementById("btn-rec-mode");
+        if (btnRec) {
+            btnRec.addEventListener("click", () => {
+                model.editMode = !model.editMode;
+                btnRec.classList.toggle("active", model.editMode);
+            });
+        }
 
         // Solo & Mute Listeners
         [1, 2, 3].forEach(v => {
@@ -1211,6 +1333,7 @@
             if (p) {
                 Object.assign(model.activeInstrument, p);
                 updateSynthUI();
+                audio.playNoteLive("D-4", model.activeInstrument);
             }
         });
 
@@ -1218,6 +1341,7 @@
             btn.addEventListener("click", () => {
                 model.activeInstrument.wave = parseInt(btn.dataset.wave);
                 updateSynthUI();
+                audio.playNoteLive("D-4", model.activeInstrument);
             });
         });
 
@@ -1234,6 +1358,15 @@
                 document.getElementById(`lbl-${p}`).textContent = e.target.value;
                 updateSynthUI();
             });
+        });
+
+        document.getElementById("sel-macro").addEventListener("change", (e) => {
+            model.activeInstrument.macro = e.target.value;
+            audio.playNoteLive("D-4", model.activeInstrument);
+        });
+
+        document.getElementById("chk-filter").addEventListener("change", (e) => {
+            model.activeInstrument.filter = e.target.checked;
         });
 
         document.getElementById("btn-kb-oct-dn").addEventListener("click", () => {
