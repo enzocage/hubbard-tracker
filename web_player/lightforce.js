@@ -305,10 +305,10 @@
             this.masterFilter = this.audioCtx.createBiquadFilter();
             this.masterFilter.type = "bandpass";
             this.masterFilter.frequency.value = 1600;
-            this.masterFilter.Q.value = 3.5;
+            this.masterFilter.Q.value = 2.0;
 
             this.masterDrive = this.audioCtx.createWaveShaper();
-            this.masterDrive.curve = this.createDistortionCurve(3);
+            this.masterDrive.curve = this.createDistortionCurve(0); // Clean 1:1 by default
 
             this.analyser = this.audioCtx.createAnalyser();
             this.analyser.fftSize = 256;
@@ -316,7 +316,7 @@
 
             [1, 2, 3].forEach(v => {
                 const g = this.audioCtx.createGain();
-                g.gain.value = 1.0;
+                g.gain.value = 0.75;
                 g.connect(this.masterGain);
                 this.voiceGains[v] = g;
             });
@@ -334,6 +334,7 @@
         }
 
         createDistortionCurve(amount) {
+            if (!amount || amount <= 0) return null;
             const k = Math.max(0, amount) * 10;
             const n = 44100;
             const curve = new Float32Array(n);
@@ -373,7 +374,8 @@
                 else if (this.voiceMute[v]) active = false;
 
                 if (this.voiceGains[v]) {
-                    this.voiceGains[v].gain.setTargetAtTime(active ? 1.0 : 0.0, now, 0.008);
+                    const targetGain = active ? (anySolo ? 1.0 : 0.75) : 0.0;
+                    this.voiceGains[v].gain.setTargetAtTime(targetGain, now, 0.008);
                 }
             });
         }
@@ -1009,17 +1011,30 @@
         renderDecompressedMatrix();
         renderPiano();
 
-        // Load 44.1kHz authentic audio stems for Lightforce
+        // Load 44.1kHz authentic audio stems for Lightforce (3 isolated voice stems in parallel)
         try {
-            const res = await fetch(`/api/render?sid=sid/Lightforce.sid&v1=1&v2=1&v3=1&start=0&end=2400`);
-            if (res.ok) {
-                const ab = await res.arrayBuffer();
-                audio.init();
-                const buf = await audio.audioCtx.decodeAudioData(ab);
-                audio.setVoiceBuffers(buf, buf, buf);
-            }
+            audio.init();
+            const [res1, res2, res3] = await Promise.all([
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=1&v2=0&v3=0&start=0&end=2400`),
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=1&v3=0&start=0&end=2400`),
+                fetch(`/api/render?sid=sid/Lightforce.sid&v1=0&v2=0&v3=1&start=0&end=2400`)
+            ]);
+
+            const [ab1, ab2, ab3] = await Promise.all([
+                res1.arrayBuffer(),
+                res2.arrayBuffer(),
+                res3.arrayBuffer()
+            ]);
+
+            const [buf1, buf2, buf3] = await Promise.all([
+                audio.audioCtx.decodeAudioData(ab1),
+                audio.audioCtx.decodeAudioData(ab2),
+                audio.audioCtx.decodeAudioData(ab3)
+            ]);
+
+            audio.setVoiceBuffers(buf1, buf2, buf3);
         } catch (e) {
-            console.error("Lightforce audio stem load error:", e);
+            console.error("Lightforce multi-stem load error:", e);
         }
 
         // Scope Animation
