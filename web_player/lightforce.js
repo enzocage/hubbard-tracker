@@ -441,7 +441,8 @@
 
             const framesPerSlot = 64 * this.speed;
             const slotDurSec = framesPerSlot * 0.02;
-            const offsetSec = isMotifLoop ? (slotIdx * slotDurSec) : 0;
+            const safeSlotIdx = Math.max(0, Math.min(slotIdx, model.orderList.length - 1));
+            const offsetSec = safeSlotIdx * slotDurSec;
 
             [1, 2, 3].forEach(v => {
                 const buf = this.voiceBuffers[v];
@@ -600,8 +601,20 @@
 
             card.addEventListener("click", () => {
                 model.activeSlotIdx = slotIdx;
+                const curMotif = model.motifs[model.activeMotifId];
+                const track = curMotif ? curMotif.track : 1;
+                const motifAtSlot = model.timelineLanes[track][slotIdx] || model.timelineLanes[1][slotIdx];
+                if (motifAtSlot) {
+                    model.activeMotifId = motifAtSlot;
+                }
                 renderArrangementTimeline();
                 renderMotifLanes();
+                renderMotifPool();
+                renderDecompressedMatrix();
+
+                if (audio.isPlaying) {
+                    audio.startPlayback(audio.isMotifLoop, slotIdx);
+                }
             });
 
             container.appendChild(card);
@@ -653,6 +666,10 @@
                     renderMotifLanes();
                     renderMotifPool();
                     renderDecompressedMatrix();
+
+                    if (audio.isPlaying) {
+                        audio.startPlayback(audio.isMotifLoop, slotIdx);
+                    }
                 });
 
                 laneEl.appendChild(block);
@@ -946,7 +963,7 @@
         };
 
         // Master Transport Listeners
-        document.getElementById("btn-play-song").addEventListener("click", () => audio.startPlayback(false));
+        document.getElementById("btn-play-song").addEventListener("click", () => audio.startPlayback(false, model.activeSlotIdx));
         document.getElementById("btn-play-motif").addEventListener("click", () => audio.startPlayback(true, model.activeSlotIdx));
         document.getElementById("btn-stop").addEventListener("click", () => audio.stopPlayback());
 
@@ -1286,7 +1303,7 @@
             if (e.code === "Space") {
                 e.preventDefault();
                 if (audio.isPlaying) audio.stopPlayback();
-                else audio.startPlayback(false);
+                else audio.startPlayback(false, model.activeSlotIdx);
                 return;
             }
 
