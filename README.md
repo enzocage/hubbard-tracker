@@ -60,7 +60,10 @@ Das Repository bietet 6 spezialisierte Web-Oberflächen, die unterschiedliche Sc
 
 ### 1. `lightforce.html` — Die 4-Ebenen Workstation & Impuls-Tracker
 > **URL:** `http://localhost:8080/lightforce.html`  
-> **Zugehörige Dateien:** [`lightforce.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.html), [`lightforce.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.css), [`lightforce.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.js)
+> **Zugehörige Dateien:** [`web_player/lightforce.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.html), [`web_player/lightforce.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.css), [`web_player/lightforce.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/lightforce.js)
+
+![Lightforce 4.0 Workstation Screenshot](screenshots/dl.png)
+*Abbildung 1: Lightforce 4.0 Workstation — Vollständige 4-Ebenen Dekonstruktion (Ebene 4: 32-Phrasen Timeline, Ebene 3: 3-Spur Motif-Lanes, Ebene 2: Musikalische Impuls- & Anschlags-Notation, Ebene 1: MOS 6581 Sound-Lab & Keyboard).*
 
 `lightforce.html` ist die fortschrittlichste Workstation im Projekt. Sie dekonstruiert das 1986er Meisterwerk ***Lightforce*** (FTL Games, D-Dorisch, 125 BPM) in **4 hierarchische musikalische Ebenen** und bietet sowohl eine revolutionäre **musikalische Impuls- & Anschlags-Notation** als auch die klassische 64-Schritt-Matrix.
 
@@ -112,7 +115,10 @@ Das Repository bietet 6 spezialisierte Web-Oberflächen, die unterschiedliche Sc
 
 ### 2. `tracker4.html` — Hubbard Motif Tracker 4.0 (Motif Recomposition Studio)
 > **URL:** `http://localhost:8080/tracker4.html`  
-> **Zugehörige Dateien:** [`tracker4.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.html), [`tracker4.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.css), [`tracker4.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.js)
+> **Zugehörige Dateien:** [`web_player/tracker4.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.html), [`web_player/tracker4.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.css), [`web_player/tracker4.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker4.js)
+
+![Hubbard Motif Tracker 4 Screenshot](screenshots/d4.png)
+*Abbildung 2: Hubbard Motif Tracker 4 — Horizontale 3-Spur Arrangement-Lanes, Motif- und Riff-Bibliothek mit Auto-Mining und MOS 6581 Synthesizer-Studio.*
 
 `tracker4.html` ist ein universelles **Motif- und Pattern-Kompositionsstudio für alle 19 Original-SIDs** von Rob Hubbard. Das Ziel von Tracker 4 ist es, nicht nur lineare Hex-Zeilen darzustellen, sondern die modulare Struktur seiner Kompositionen greifbar zu machen.
 
@@ -127,7 +133,7 @@ Das Repository bietet 6 spezialisierte Web-Oberflächen, die unterschiedliche Sc
 
 ### 3. `tracker3.html` — 3-Tier Layered Architecture Studio
 > **URL:** `http://localhost:8080/tracker3.html`  
-> **Zugehörige Dateien:** [`tracker3.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.html), [`tracker3.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.css), [`tracker3.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.js)
+> **Zugehörige Dateien:** [`web_player/tracker3.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.html), [`web_player/tracker3.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.css), [`web_player/tracker3.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker3.js)
 
 `tracker3.html` implementiert eine **dreistufige, modulare Architektur**, die den Dekompilierungs- und Syntheseprozess in drei klar getrennte Schichten unterteilt:
 
@@ -151,7 +157,10 @@ Das Repository bietet 6 spezialisierte Web-Oberflächen, die unterschiedliche Sc
 
 ### 4. `tracker2.html` — HTF Studio Pro v2 (3-Spur Matrix & 50-Kriterien Telemetrie)
 > **URL:** `http://localhost:8080/tracker2.html`  
-> **Zugehörige Dateien:** [`tracker2.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.html), [`tracker2.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.css), [`tracker2.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.js)
+> **Zugehörige Dateien:** [`web_player/tracker2.html`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.html), [`web_player/tracker2.css`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.css), [`web_player/tracker2.js`](file:///c:/Users/enzoc/Desktop/AI%20Code/hubb/web_player/tracker2.js)
+
+![HTF Studio Pro v2 Screenshot](screenshots/d2.png)
+*Abbildung 3: HTF Studio Pro v2 — Klassische 3-Spur Matrix mit 5-Feld Zelle, 6502-Bytecode-Disassembler und MOS 6581 25-Register Live-Matrix.*
 
 `tracker2.html` ist die moderne Inkarnation des klassischen Chiptune-Trackers im Stil von *FastTracker 2*, erweitert um das native **Hubbard Tracker Format (HTF v1.0)** und ein integriertes **50-Kriterien Telemetrie-Dashboard**.
 
