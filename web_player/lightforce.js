@@ -519,41 +519,60 @@
             });
         }
 
-        // Audition Single Voice Step Slice (Acoustic WYSIWYG)
-        auditionStepSlice(trackIdx, stepIdx, durFrames = 6, noteStr = null) {
+        // Audition Single Voice Step Slice (100% Exact Authentic SID Recording from the Song)
+        auditionStepSlice(trackIdx, stepIdx, durFrames = 6, isCustomEdit = false, customNote = null) {
             this.init();
             this.resume();
 
-            // 1. If step has a valid note pitch, synthesize it with the track's authentic instrument patch!
-            if (noteStr && noteStr !== "..." && noteStr !== "===") {
-                const trackPresetMap = {
-                    1: LIGHTFORCE_PRESETS["01_dorian_lead"],
-                    2: LIGHTFORCE_PRESETS["03_m11_arpeggio"],
-                    3: LIGHTFORCE_PRESETS["04_slap_bass"]
-                };
-                const basePatch = trackPresetMap[trackIdx] || model.activeInstrument;
-                const instPatch = Object.assign({}, basePatch, { track: trackIdx });
-                this.playNoteLive(noteStr, instPatch);
+            // If note was manually entered/edited in Edit-Mode:
+            if (isCustomEdit && customNote && customNote !== "..." && customNote !== "===") {
+                this.playNoteLive(customNote, model.activeInstrument);
                 return;
             }
 
-            // 2. Fallback to stem audio buffer slice with active slot offset
             const buf = this.voiceBuffers[trackIdx];
-            if (!buf) return;
 
-            const durSec = Math.max(0.12, durFrames * 0.02);
-            const slotOffsetSec = (model.activeSlotIdx || 0) * 64 * this.speed * 0.02;
-            const startSec = slotOffsetSec + (stepIdx * this.speed * 0.02);
+            // Determine timeline slot index for this motif
+            let slotIdx = model.activeSlotIdx;
+            const laneSlots = model.timelineLanes[trackIdx] || [];
+            if (slotIdx === undefined || slotIdx < 0 || laneSlots[slotIdx] !== model.activeMotifId) {
+                const foundIdx = laneSlots.indexOf(model.activeMotifId);
+                slotIdx = (foundIdx !== -1) ? foundIdx : 0;
+            }
 
-            try {
-                const src = this.audioCtx.createBufferSource();
-                src.buffer = buf;
-                const g = this.audioCtx.createGain();
-                g.gain.value = 1.0;
-                src.connect(g);
-                g.connect(this.voiceGains[trackIdx]);
-                src.start(0, Math.min(Math.max(0, startSec), buf.duration - 0.05), durSec);
-            } catch (e) {}
+            const stepSec = this.speed * 0.02; // 0.12s per step (6 frames * 20ms)
+            const slotOffsetSec = slotIdx * 64 * stepSec;
+            const startSec = slotOffsetSec + (stepIdx * stepSec);
+            const durSec = Math.max(0.24, durFrames * 0.02);
+
+            if (buf && startSec < buf.duration) {
+                try {
+                    const src = this.audioCtx.createBufferSource();
+                    src.buffer = buf;
+
+                    const env = this.audioCtx.createGain();
+                    const now = this.audioCtx.currentTime;
+                    // Smooth de-click envelope
+                    env.gain.setValueAtTime(0.001, now);
+                    env.gain.linearRampToValueAtTime(1.0, now + 0.004);
+                    env.gain.setValueAtTime(1.0, now + durSec - 0.02);
+                    env.gain.linearRampToValueAtTime(0.001, now + durSec);
+
+                    src.connect(env);
+                    // Route to masterGain so audition is always loud, isolated, and crystal-clear
+                    env.connect(this.masterGain);
+                    src.start(now, Math.max(0, startSec), durSec);
+                    return;
+                } catch (e) {
+                    console.error("Audition slice playback error:", e);
+                }
+            }
+
+            // Fallback to Live Synthesizer if stems not loaded
+            const curStep = model.motifs[model.activeMotifId]?.steps[stepIdx];
+            if (curStep && curStep.note && curStep.note !== "..." && curStep.note !== "===") {
+                this.playNoteLive(curStep.note, model.activeInstrument);
+            }
         }
 
         // Live Play Note with Active Ebene 1 MOS 6581 Patch
@@ -909,8 +928,14 @@
                 row.classList.add("cursor");
 
                 let durFrames = 6;
-                if (step.dur && step.dur.startsWith("L")) durFrames = parseInt(step.dur.slice(1)) || 6;
-                audio.auditionStepSlice(motif.track, sIdx, durFrames, step.note);
+                if (step.dur && step.dur.startsWith("L")) {
+                    durFrames = parseInt(step.dur.slice(1)) || 6;
+                } else if (step.dur) {
+                    durFrames = parseInt(step.dur) || 6;
+                }
+                durFrames = Math.max(8, durFrames);
+
+                audio.auditionStepSlice(motif.track, sIdx, durFrames, step._edited, step.note);
             });
 
             table.appendChild(row);
@@ -1031,7 +1056,8 @@
                         dur: "L06",
                         inst: String(inst.id).padStart(2, '0'),
                         wave: `$${inst.wave.toString(16).toUpperCase()}`,
-                        fx: inst.macro
+                        fx: inst.macro,
+                        _edited: true
                     };
                 }
 
