@@ -129,7 +129,7 @@ class MasterStudioHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(500, f"POST Server error: {e}")
 
     def handle_api_tracks(self):
-        dirs = [("sid", "Original (1985-87)"), ("output", "Remix"), (".", "Masterpiece")]
+        dirs = [("sid", "Original (1985-87)"), ("remix", "Remix"), ("output", "Remix"), (".", "Masterpiece")]
         tracks = []
         seen = set()
 
