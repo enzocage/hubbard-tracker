@@ -2,14 +2,21 @@
 Renders all 12 Instrument Types and 15 Musical Stylistic Devices as MP3 audio examples.
 """
 import os
+import sys
 import subprocess
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.synth import SIDSynthesizer
 
-OUT_DIR = os.path.join(os.path.dirname(__file__), "web_player", "audio_examples")
+OUT_DIR = os.path.join(PROJECT_ROOT, "web_player", "audio_examples")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # Also create audio_examples in project root for direct relative file access
-ROOT_OUT_DIR = os.path.join(os.path.dirname(__file__), "audio_examples")
+ROOT_OUT_DIR = os.path.join(PROJECT_ROOT, "audio_examples")
 os.makedirs(ROOT_OUT_DIR, exist_ok=True)
 
 synth = SIDSynthesizer(sample_rate=44100)

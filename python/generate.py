@@ -5,6 +5,12 @@ Generates and validates all 5 Rob Hubbard Style Archetypes into playable .sid fi
 
 import os
 import sys
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.composer import HubbardComposer, ARCHETYPE_CONFIGS
 from engine.validator import validate_sid_file
 

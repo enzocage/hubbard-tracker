@@ -12,8 +12,15 @@ import socketserver
 import urllib.parse
 import json
 import os
+import sys
 import io
 import traceback
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.extractor import SIDExtractor
 from engine.synth import SIDSynthesizer
 from engine.remixer import HubbardRemixer
@@ -23,7 +30,7 @@ from engine.transformer import StreamTransformer as SIDStreamTransformer
 from engine.stream_compiler import SIDStreamCompiler
 
 PORT = 8080
-WEB_DIR = os.path.join(os.path.dirname(__file__), "web_player")
+WEB_DIR = os.path.join(PROJECT_ROOT, "web_player")
 synth_engine = SIDSynthesizer()
 stream_compiler = SIDStreamCompiler()
 

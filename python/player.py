@@ -8,16 +8,22 @@ import os
 import argparse
 import winsound
 import tempfile
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.synth import SIDSynthesizer
 from engine.extractor import SIDExtractor
 
 def list_tracks():
-    """Lists all available .sid files in workspace, sid/, and output/."""
+    """Lists all available .sid files in workspace, sid/, remix/, and output/."""
     print("=" * 80)
     print("   VERFÜGBARE ROB HUBBARD .SID DATEIEN IM PROJEKT")
     print("=" * 80)
 
-    dirs = [".", "sid", "output"]
+    dirs = ["sid", "remix", "output", "."]
     found = []
 
     for d in dirs:

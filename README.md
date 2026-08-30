@@ -284,7 +284,7 @@ Das Projekt enthält 21 Original-Klassiker von Rob Hubbard (1985–1987) im Verz
 ### 2. Server starten
 Starten Sie das Multitrack-Audio- und Tracker-Backend mit:
 ```bash
-python player_server.py
+python python/player_server.py
 ```
 *(Der Server startet standardmäßig auf Port 8080).*
 

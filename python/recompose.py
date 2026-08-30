@@ -5,6 +5,13 @@ re-synthesizes bit-accurate 1:1 tracks as well as parametric hybrid variations.
 """
 
 import os
+import sys
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.extractor import SIDExtractor
 from engine.stream_compiler import SIDStreamCompiler
 from engine.transformer import StreamTransformer

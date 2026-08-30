@@ -5,6 +5,13 @@ and compiles standard-compliant playable .sid files.
 """
 
 import os
+import sys
+
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
 from engine.remixer import HubbardRemixer
 from engine.validator import validate_sid_file
 
