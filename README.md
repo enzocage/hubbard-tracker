@@ -315,6 +315,20 @@ In allen Tracker-Oberflächen können Noten und Befehle direkt über die PC-Tast
 
 ---
 
+## 📚 Technische Konzept- & Analysedokumente (`konzept/`)
+
+Alle musiktheoretischen, architektonischen und synthesizer-technischen Abhandlungen befinden sich im Verzeichnis [`konzept/`](konzept/):
+
+* **[`konzept/hubbard-structure.md`](konzept/hubbard-structure.md)** — Ausführliche Analyse aller 12 Instrumententypen und 15 musikalischen Stilmittel von Rob Hubbard mit 27 verlinkten Hörbeispielen.
+* **[`konzept/50criteria.md`](konzept/50criteria.md)** — Das 50-Kriterien-System zur maschinellen Bewertung und Synthese von Hubbard-Chiptunes.
+* **[`konzept/htf-spezifikation.md`](konzept/htf-spezifikation.md)** — Spezifikation des Hubbard Tracker Formats (HTF v1.0).
+* **[`konzept/sid-struktur.md`](konzept/sid-struktur.md)** — 6502 Maschinencode-Zustandsautomat vs. Tracker-Paradigma.
+* **[`konzept/patterns_and_algorythms.md`](konzept/patterns_and_algorythms.md)** — Mathematische und algorithmische Muster in Rob Hubbards 50Hz-Registerströmen.
+* **[`konzept/struktur.md`](konzept/struktur.md)** — Mehrspurige modulare Partitur- und Frequenzanalyse von *Commando*.
+* **[`konzept/hubbard.md`](konzept/hubbard.md)** — Umfassende musikwissenschaftliche Gesamtdokumentation.
+
+---
+
 ## 📜 Lizenz & Danksagung
 
 Dieses Projekt ist unter der **MIT-Lizenz** veröffentlicht.  
