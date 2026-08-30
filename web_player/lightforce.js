@@ -496,14 +496,30 @@
         }
 
         // Audition Single Voice Step Slice (Acoustic WYSIWYG)
-        auditionStepSlice(trackIdx, stepIdx, durFrames = 6) {
+        auditionStepSlice(trackIdx, stepIdx, durFrames = 6, noteStr = null) {
             this.init();
             this.resume();
+
+            // 1. If step has a valid note pitch, synthesize it with the track's authentic instrument patch!
+            if (noteStr && noteStr !== "..." && noteStr !== "===") {
+                const trackPresetMap = {
+                    1: LIGHTFORCE_PRESETS["01_dorian_lead"],
+                    2: LIGHTFORCE_PRESETS["03_m11_arpeggio"],
+                    3: LIGHTFORCE_PRESETS["04_slap_bass"]
+                };
+                const basePatch = trackPresetMap[trackIdx] || model.activeInstrument;
+                const instPatch = Object.assign({}, basePatch, { track: trackIdx });
+                this.playNoteLive(noteStr, instPatch);
+                return;
+            }
+
+            // 2. Fallback to stem audio buffer slice with active slot offset
             const buf = this.voiceBuffers[trackIdx];
             if (!buf) return;
 
             const durSec = Math.max(0.12, durFrames * 0.02);
-            const startSec = stepIdx * this.speed * 0.02;
+            const slotOffsetSec = (model.activeSlotIdx || 0) * 64 * this.speed * 0.02;
+            const startSec = slotOffsetSec + (stepIdx * this.speed * 0.02);
 
             try {
                 const src = this.audioCtx.createBufferSource();
@@ -512,7 +528,7 @@
                 g.gain.value = 1.0;
                 src.connect(g);
                 g.connect(this.voiceGains[trackIdx]);
-                src.start(0, startSec, durSec);
+                src.start(0, Math.min(Math.max(0, startSec), buf.duration - 0.05), durSec);
             } catch (e) {}
         }
 
@@ -822,6 +838,20 @@
         const motif = model.motifs[model.activeMotifId];
         if (!motif) return;
 
+        // Automatically sync active instrument on Ebene 1 with the selected track's signature preset
+        const trackPresetKeyMap = {
+            1: "01_dorian_lead",
+            2: "03_m11_arpeggio",
+            3: "04_slap_bass"
+        };
+        const presetKey = trackPresetKeyMap[motif.track] || "01_dorian_lead";
+        if (model.activeInstrument.track !== motif.track) {
+            Object.assign(model.activeInstrument, LIGHTFORCE_PRESETS[presetKey], { track: motif.track });
+            const selPreset = document.getElementById("sel-lf-preset");
+            if (selPreset) selPreset.value = presetKey;
+            updateSynthUI();
+        }
+
         document.getElementById("active-motif-badge").textContent = motif.id;
         document.getElementById("active-motif-name").textContent = `${motif.name.toUpperCase()} (SPUR ${motif.track} • D-DORISCH)`;
 
@@ -856,7 +886,7 @@
 
                 let durFrames = 6;
                 if (step.dur && step.dur.startsWith("L")) durFrames = parseInt(step.dur.slice(1)) || 6;
-                audio.auditionStepSlice(motif.track, sIdx, durFrames);
+                audio.auditionStepSlice(motif.track, sIdx, durFrames, step.note);
             });
 
             table.appendChild(row);
